@@ -1,0 +1,11 @@
+node_modules/
+.pnpm-store/
+dist/
+*.local
+test-results/
+.vite/
+.tools/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
