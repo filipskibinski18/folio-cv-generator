@@ -41,4 +41,13 @@ describe('Historia i zapis lokalny', () => {
     expect(useResumeStore.getState().data.personal.firstName).toBe('Ewa'); expect(getStorageError()).toContain('JSON');
     mock.mockRestore();
   });
+  it('zachowuje zdjęcie po zmianie szablonu i zapisuje je w localStorage', () => {
+    const photo = 'data:image/jpeg;base64,/9j/test';
+    useResumeStore.getState().updatePersonal({ photo });
+    useResumeStore.getState().applyTemplate(presets[7]);
+    expect(useResumeStore.getState().data.personal.photo).toBe(photo);
+    expect(JSON.parse(memory.get('folio-resume-v1')!).state.data.personal.photo).toBe(photo);
+    const id = useResumeStore.getState().saveTemplate('Ze zdjęciem');
+    expect(useResumeStore.getState().templates.find(template => template.id === id)!.theme.photo).toEqual(presets[7].theme.photo);
+  });
 });

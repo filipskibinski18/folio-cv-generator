@@ -9,27 +9,34 @@ import { defaultTheme, presets } from '../data/presets';
 import type { ResumeData, ResumeTheme } from '../types/resume';
 import { mmToPt } from '../lib/format';
 
+const testPhoto = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j6N8AAAAASUVORK5CYII=';
+
 for (const family of ['Inter', 'Lora', 'Roboto']) Font.register({ family, fonts: [400, 700].map(fontWeight => ({ src: resolve('public/fonts', `${family}-${fontWeight}.ttf`), fontWeight })) });
 Font.registerHyphenationCallback(word => [word]);
 async function inspect(data: ResumeData, theme: ResumeTheme) {
   const buffer = await renderToBuffer(<ResumeDocument data={data} theme={theme} />);
   const pdf = await getDocument({ data: new Uint8Array(buffer) }).promise;
-  let text = ''; let count = 0;
+  let text = ''; let count = 0; let images = 0; const pageTexts: string[] = [];
   const outOfBounds: { page: number; text: string; y: number }[] = [];
   for (let number = 1; number <= pdf.numPages; number++) {
     const page = await pdf.getPage(number); const items = (await page.getTextContent()).items.filter((item): item is TextItem => 'str' in item);
-    text += items.map(item => item.str).join(' '); count += items.length;
+    const projectTitle = items.find(item => item.str === 'Careflow');
+    const projectDescription = items.find(item => item.str.includes('Koncepcja aplikacji'));
+    if (projectTitle && projectDescription) expect(projectTitle.transform[5] - projectDescription.transform[5]).toBeGreaterThan(5);
+    const pageText = items.map(item => item.str).join(' '); text += pageText; pageTexts.push(pageText.replace(/\s/g, '')); count += items.length;
     for (const item of items) {
       if (!item.str.trim() || /^\d+\s*\/\s*\d+$/.test(item.str)) continue;
       const y = item.transform[5];
       if (y < mmToPt(theme.geometry.margins.bottom) - 3 || y > 842 - mmToPt(theme.geometry.margins.top) + 2) outOfBounds.push({ page: number, text: item.str, y });
     }
     const operators = await page.getOperatorList();
-    expect(operators.fnArray).not.toContain(OPS.paintImageXObject);
+    const imageCount = operators.fnArray.filter(op => op === OPS.paintImageXObject).length;
+    images += imageCount;
+    if (!data.personal.photo || !theme.photo.isVisible) expect(imageCount).toBe(0);
     expect(page.view[2]).toBeCloseTo(595.28, 1); expect(page.view[3]).toBeCloseTo(841.89, 1);
   }
   const pages = pdf.numPages; await pdf.destroy();
-  return { text: text.replace(/\s/g, ''), pages, count, outOfBounds };
+  return { text: text.replace(/\s/g, ''), pageTexts, pages, count, images, outOfBounds };
 }
 describe('Wektorowy PDF A4 i podział stron', () => {
   it('zachowuje polskie znaki i mieści domyślne CV na stronie A4', async () => {
@@ -41,6 +48,7 @@ describe('Wektorowy PDF A4 i podział stron', () => {
   it('eksportuje wszystkie presety oraz font Roboto bez błędów', async () => {
     for (const preset of presets.slice(1)) {
       const result = await inspect(sampleResume, preset.theme); expect(result.text).toContain('Docplanner'); expect(result.text).toContain('example.com/portfolio'); expect(result.outOfBounds).toEqual([]);
+      expect(result.pageTexts.find(text => text.includes('PROJEKTY'))).toContain('Careflow');
     }
     const theme = structuredClone(defaultTheme); theme.typography.fontFamily = 'Roboto'; theme.typography.headingFont = 'Roboto';
     const result = await inspect(sampleResume, theme); expect(result.text).toContain('Warszawa,Polska');
@@ -59,6 +67,14 @@ describe('Wektorowy PDF A4 i podział stron', () => {
     const theme = structuredClone(defaultTheme); theme.layout = 'single';
     const result = await inspect(data, theme); expect(result.text).toContain('ENDOFLONGPARAGRAPH'); expect(result.text).toContain('Docplanner'); expect(result.outOfBounds).toEqual([]);
   }, 30000);
+  it('przenosi długi projekt na kolejne strony bez ucinania jego opisu', async () => {
+    const data = structuredClone(sampleResume);
+    data.projects[0].description = `Koncepcja aplikacji. ${'Projektowanie i wdrażanie dostępnych rozwiązań. '.repeat(150)} ENDOFLONGPROJECT`;
+    const result = await inspect(data, presets.find(preset => preset.id === 'midnight')!.theme);
+    expect(result.text).toContain('ENDOFLONGPROJECT'); expect(result.text).toContain('Careflow');
+    expect(result.pages).toBeGreaterThan(2); expect(result.outOfBounds).toEqual([]);
+    expect(result.pageTexts.find(text => text.includes('PROJEKTY'))).toContain('Careflow');
+  }, 30000);
   it('respektuje pozycję klauzuli i ukrycie sekcji w jednej kolumnie', async () => {
     const theme = structuredClone(defaultTheme); theme.layout = 'single';
     const clause = theme.sections.pop()!; theme.sections.unshift(clause);
@@ -66,5 +82,14 @@ describe('Wektorowy PDF A4 i podział stron', () => {
     const result = await inspect(sampleResume, theme);
     expect(result.text.indexOf('Wyrażamzgodę')).toBeLessThan(result.text.indexOf('Docplanner'));
     expect(result.text).not.toContain('UniwersytetSWPS');
+  }, 30000);
+  it('osadza zdjęcie we wszystkich szablonach, zachowując natywny tekst i marginesy', async () => {
+    const data = { ...sampleResume, personal: { ...sampleResume.personal, photo: testPhoto } };
+    for (const preset of presets) {
+      const result = await inspect(data, preset.theme);
+      expect(result.images).toBe(1); expect(result.count).toBeGreaterThan(70); expect(result.text).toContain('AleksandraNowak'); expect(result.text).toContain('Docplanner'); expect(result.outOfBounds).toEqual([]);
+    }
+    const hidden = await inspect(data, { ...defaultTheme, photo: { ...defaultTheme.photo, isVisible: false } });
+    expect(hidden.images).toBe(0); expect(hidden.text).not.toContain('TWOJEZDJĘCIE');
   }, 30000);
 });

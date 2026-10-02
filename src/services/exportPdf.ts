@@ -16,7 +16,7 @@ function getWorker() {
     };
     worker.onerror = event => {
       const detail = event.message || 'Nieznany błąd';
-      console.error('Folio PDF worker:', detail);
+      console.error('Folio PDF worker:', detail, `${event.filename}:${event.lineno}:${event.colno}`);
       pending.forEach(item => item.reject(new Error(`Błąd renderera PDF: ${detail}`)));
       pending.clear(); cache.clear(); worker?.terminate(); worker = undefined;
     };

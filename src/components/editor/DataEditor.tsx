@@ -3,10 +3,11 @@ import type { Bullet, ResumeData, SectionId } from '../../types/resume';
 import { useResumeStore } from '../../store/useResumeStore';
 import { uid } from '../../lib/format';
 import { AddButton, Field, ItemCard, SelectField } from './Fields';
+import { PhotoEditor } from './PhotoEditor';
 
 export function PersonalEditor() {
   const personal = useResumeStore(state => state.data.personal); const update = useResumeStore(state => state.updatePersonal);
-  return <div className="form-content"><div className="field-grid"><Field label="Imię" value={personal.firstName} onChange={firstName => update({ firstName })} /><Field label="Nazwisko" value={personal.lastName} onChange={lastName => update({ lastName })} /></div>
+  return <div className="form-content"><PhotoEditor /><div className="field-grid"><Field label="Imię" value={personal.firstName} onChange={firstName => update({ firstName })} /><Field label="Nazwisko" value={personal.lastName} onChange={lastName => update({ lastName })} /></div>
     <Field label="Stanowisko / tytuł zawodowy" value={personal.title} onChange={title => update({ title })} placeholder="np. Senior Product Designer" />
     <Field label="Adres e-mail" type="email" value={personal.email} onChange={email => update({ email })} />
     <div className="field-grid"><Field label="Telefon" type="tel" value={personal.phone} onChange={phone => update({ phone })} /><Field label="Lokalizacja" value={personal.location} onChange={location => update({ location })} /></div>

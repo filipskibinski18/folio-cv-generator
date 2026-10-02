@@ -3,6 +3,8 @@ import { z } from 'zod';
 const text = z.string().max(20000);
 const short = z.string().max(300);
 const id = z.string().min(1).max(100);
+// Only self-contained raster images are persisted or imported; no remote URLs/SVG.
+export const photoDataSchema = z.string().max(800000).refine(value => value === '' || /^data:image\/(?:jpeg;base64,\/9j\/[A-Za-z0-9+/]*|png;base64,iVBORw0KGgo[A-Za-z0-9+/]*)={0,2}$/.test(value), 'Zdjęcie musi być lokalnym obrazem JPEG lub PNG.').default('');
 export const sectionIds = ['summary', 'experience', 'education', 'skills', 'projects', 'certificates', 'languages', 'links', 'consent'] as const;
 export type SectionId = (typeof sectionIds)[number];
 export const sectionLabels: Record<SectionId, string> = {
@@ -23,7 +25,7 @@ export const certificateSchema = z.object({ id, name: short, issuer: short, date
 export const languageSchema = z.object({ id, name: short, level: short });
 export const linkSchema = z.object({ id, label: short, url: short });
 export const resumeDataSchema = z.object({
-  personal: z.object({ firstName: short, lastName: short, title: short, email: short, phone: short, location: short, website: short }),
+  personal: z.object({ firstName: short, lastName: short, title: short, email: short, phone: short, location: short, website: short, photo: photoDataSchema }),
   summary: text,
   experience: z.array(experienceSchema).max(200), education: z.array(educationSchema).max(200),
   skills: z.array(skillCategorySchema).max(100), projects: z.array(projectSchema).max(200),
@@ -59,6 +61,9 @@ export const layoutNames = ['single', 'sidebar-left', 'sidebar-right', 'grid'] a
 export type LayoutName = (typeof layoutNames)[number];
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Wymagany kolor HEX, np. #25564a.');
 export const resumeThemeSchema = z.object({
+  headerStyle: z.enum(['accent', 'banner', 'centered']).default('accent'),
+  sectionStyle: z.enum(['underline', 'filled', 'plain']).default('underline'),
+  photo: z.object({ isVisible: z.boolean(), shape: z.enum(['circle', 'rounded', 'square']), size: z.number().min(20).max(40), position: z.enum(['left', 'right']) }).default({ isVisible: true, shape: 'circle', size: 26, position: 'right' }),
   typography: z.object({ fontFamily: z.enum(fontNames), headingFont: z.enum(fontNames), baseSize: z.number().min(8).max(14), headingSize: z.number().min(10).max(20), nameSize: z.number().min(20).max(44), lineHeight: z.number().min(1.1).max(1.9), tracking: z.number().min(-0.2).max(2) }),
   colors: z.object({ accent: color, background: color, text: color, muted: color, separator: color, sidebar: color }),
   geometry: z.object({ margins: z.object({ top: z.number().min(8).max(30), right: z.number().min(8).max(30), bottom: z.number().min(8).max(30), left: z.number().min(8).max(30) }), sectionPadding: z.number().min(0).max(12), sectionGap: z.number().min(6).max(28), blockGap: z.number().min(3).max(18), radius: z.number().min(0).max(12), lineWidth: z.number().min(0).max(3), columnGap: z.number().min(8).max(30) }),

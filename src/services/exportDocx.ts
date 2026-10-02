@@ -1,10 +1,11 @@
-import { AlignmentType, BorderStyle, Document, ExternalHyperlink, HeadingLevel, LevelFormat, Packer, Paragraph, ShadingType, Table, TableCell, TableLayoutType, TableRow, TextRun, VerticalAlign, WidthType } from 'docx';
+import { AlignmentType, BorderStyle, Document, ExternalHyperlink, HeadingLevel, ImageRun, LevelFormat, Packer, Paragraph, ShadingType, Table, TableCell, TableLayoutType, TableRow, TextRun, VerticalAlign, WidthType } from 'docx';
 import { Buffer } from 'buffer';
 import type { Bullet, ResumeData, ResumeTheme, SectionId } from '../types/resume';
 import { dateRange, documentFilename, downloadBlob, fullName, inlineRuns, mmToTwip, safeUrl, urlLabel } from '../lib/format';
+import { contrastColor, photoForDocx } from '../lib/photo';
 
 type EmbeddedFonts = NonNullable<ConstructorParameters<typeof Document>[0]['fonts']>;
-export function createDocxDocument(data: ResumeData, theme: ResumeTheme, ats = false, fonts: EmbeddedFonts = []): Document {
+export function createDocxDocument(data: ResumeData, theme: ResumeTheme, ats = false, fonts: EmbeddedFonts = [], portrait?: Uint8Array): Document {
   const { typography: t, colors: c, geometry: g } = theme;
   const hex = (color: string) => color.slice(1);
   const size = t.baseSize * 2;
@@ -19,7 +20,8 @@ export function createDocxDocument(data: ResumeData, theme: ResumeTheme, ats = f
   ]);
   const heading = (value: string) => new Paragraph({ text: value.toLocaleUpperCase('pl'), heading: HeadingLevel.HEADING_1, keepNext: true,
     spacing: { before: Math.round(g.sectionGap * 20), after: 130 },
-    border: g.lineWidth ? { bottom: { color: hex(c.separator), style: BorderStyle.SINGLE, size: Math.max(1, Math.round(g.lineWidth * 8)), space: 4 } } : undefined,
+    border: theme.sectionStyle === 'underline' && g.lineWidth ? { bottom: { color: hex(c.separator), style: BorderStyle.SINGLE, size: Math.max(1, Math.round(g.lineWidth * 8)), space: 4 } } : undefined,
+    shading: theme.sectionStyle === 'filled' && !ats ? { fill: hex(c.sidebar), type: ShadingType.CLEAR } : undefined,
   });
   const sectionBody = (id: SectionId): Paragraph[] => {
     switch (id) {
@@ -39,19 +41,34 @@ export function createDocxDocument(data: ResumeData, theme: ResumeTheme, ats = f
   const footer = !ats && theme.layout !== 'single' && tail?.id === 'consent' && tail.column === 'main' ? tail : undefined;
   const sections = visible.filter(section => section !== footer);
   const render = (section: ResumeTheme['sections'][number]) => section.id === 'consent' ? sectionBody(section.id) : [heading(section.title), ...sectionBody(section.id)];
+  const banner = !ats && theme.headerStyle === 'banner';
+  const headerColor = banner ? contrastColor(c.accent) : c.text;
+  const alignment = theme.headerStyle === 'centered' && !ats ? AlignmentType.CENTER : AlignmentType.LEFT;
   const header = [
-    new Paragraph({ children: rich(fullName(data), { size: t.nameSize * 2, bold: true, font: t.headingFont }), spacing: { after: 110 }, keepNext: true }),
-    new Paragraph({ children: rich(data.personal.title, { size: size + 6, color: hex(c.accent) }), spacing: { after: 140 }, keepNext: true }),
-    new Paragraph({ children: rich([data.personal.location, data.personal.email, data.personal.phone, data.personal.website].filter(Boolean).join(' · '), { size: size - 2, color: hex(c.muted) }), spacing: { after: 220 } }),
+    new Paragraph({ children: rich(fullName(data), { size: t.nameSize * 2, bold: true, font: t.headingFont, color: hex(headerColor) }), alignment, spacing: { after: 110 }, keepNext: true }),
+    new Paragraph({ children: rich(data.personal.title, { size: size + 6, color: hex(banner ? headerColor : c.accent) }), alignment, spacing: { after: 140 }, keepNext: true }),
+    new Paragraph({ children: rich([data.personal.location, data.personal.email, data.personal.phone, data.personal.website].filter(Boolean).join(' · '), { size: size - 2, color: hex(banner ? headerColor : c.muted) }), alignment, spacing: { after: 100 } }),
   ];
-  const content: (Paragraph | Table)[] = [...header];
+  const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+  const tableBorders = { top: noBorder, left: noBorder, bottom: noBorder, right: noBorder, insideHorizontal: noBorder, insideVertical: noBorder };
+  const pageWidth = mmToTwip(210 - g.margins.left - g.margins.right);
+  const showPhoto = theme.photo.isVisible && !ats;
+  const content: (Paragraph | Table)[] = [];
+  if (showPhoto || banner) {
+    const photoWidth = mmToTwip(theme.photo.size);
+    const imagePixels = theme.photo.size * 96 / 25.4;
+    const identity = new TableCell({ children: header, width: { size: pageWidth - (showPhoto ? photoWidth : 0), type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, shading: banner ? { fill: hex(c.accent), type: ShadingType.CLEAR } : undefined, margins: { top: banner ? 180 : 0, bottom: banner ? 180 : 0, left: 180, right: 180 } });
+    const picture = data.personal.photo ? new Paragraph({ children: [new ImageRun({ type: portrait || data.personal.photo.startsWith('data:image/png') ? 'png' : 'jpg', data: portrait ? Buffer.from(portrait) : Buffer.from(data.personal.photo.split(',')[1], 'base64'), transformation: { width: imagePixels, height: imagePixels }, altText: { name: 'Zdjęcie profilowe', title: fullName(data), description: `Zdjęcie profilowe — ${fullName(data)}` } })], alignment: AlignmentType.CENTER, spacing: { after: 0, before: 0 } }) : new Paragraph({ children: [new TextRun({ text: 'MIEJSCE NA ZDJĘCIE', font: t.fontFamily, size: 13, color: hex(c.accent) })], alignment: AlignmentType.CENTER, spacing: { before: Math.max(0, photoWidth / 2 - 150), after: Math.max(0, photoWidth / 2 - 150) } });
+    const imageCell = new TableCell({ children: [picture], width: { size: photoWidth, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, shading: { fill: hex(data.personal.photo && banner ? c.accent : c.sidebar), type: ShadingType.CLEAR }, margins: { top: 0, bottom: 0, left: 0, right: 0 } });
+    const cells = !showPhoto ? [identity] : theme.photo.position === 'left' ? [imageCell, identity] : [identity, imageCell];
+    const columnWidths = !showPhoto ? [pageWidth] : theme.photo.position === 'left' ? [photoWidth, pageWidth - photoWidth] : [pageWidth - photoWidth, photoWidth];
+    content.push(new Table({ width: { size: pageWidth, type: WidthType.DXA }, layout: TableLayoutType.FIXED, columnWidths, borders: tableBorders, rows: [new TableRow({ children: cells, cantSplit: true })] }), new Paragraph({ spacing: { after: 100, before: 0, line: 100 } }));
+  } else content.push(...header);
   if (ats || theme.layout === 'single') content.push(...sections.flatMap(render));
   else {
-    const pageWidth = mmToTwip(210 - g.margins.left - g.margins.right);
     const ratio = (theme.layout === 'grid' ? 47 : theme.sidebarWidth) / 100;
     const side = sections.filter(s => s.column === 'sidebar').flatMap(render);
     const main = sections.filter(s => s.column === 'main').flatMap(render);
-    const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
     const cell = (children: Paragraph[], isSide: boolean) => new TableCell({
       children: children.length ? children : [new Paragraph('')], width: { size: Math.round(pageWidth * (isSide ? ratio : 1 - ratio)), type: WidthType.DXA }, verticalAlign: VerticalAlign.TOP,
       shading: isSide ? { fill: hex(c.sidebar), type: ShadingType.CLEAR } : undefined,
@@ -61,7 +78,7 @@ export function createDocxDocument(data: ResumeData, theme: ResumeTheme, ats = f
     const cells = theme.layout === 'sidebar-right' ? [mainCell, sideCell] : [sideCell, mainCell];
     content.push(new Table({ width: { size: pageWidth, type: WidthType.DXA }, layout: TableLayoutType.FIXED,
       columnWidths: theme.layout === 'sidebar-right' ? [Math.round(pageWidth * (1 - ratio)), Math.round(pageWidth * ratio)] : [Math.round(pageWidth * ratio), Math.round(pageWidth * (1 - ratio))],
-      borders: { top: noBorder, left: noBorder, bottom: noBorder, right: noBorder, insideHorizontal: noBorder, insideVertical: noBorder },
+      borders: tableBorders,
       rows: [new TableRow({ children: cells, cantSplit: false })],
     }));
   }
@@ -80,6 +97,7 @@ export async function exportDocx(data: ResumeData, theme: ResumeTheme, ats = fal
     if (!response.ok) throw new Error(`Nie udało się załadować fontu ${name}. Odśwież aplikację i spróbuj ponownie.`);
     return { name, data: Buffer.from(await response.arrayBuffer()) };
   }));
-  const blob = await Packer.toBlob(createDocxDocument(data, theme, ats, fonts));
+  const portrait = !ats && theme.photo.isVisible && data.personal.photo ? await photoForDocx(data.personal.photo, theme.photo.shape) : undefined;
+  const blob = await Packer.toBlob(createDocxDocument(data, theme, ats, fonts, portrait));
   downloadBlob(blob, documentFilename(data, ats ? 'ATS.docx' : 'docx'));
 }

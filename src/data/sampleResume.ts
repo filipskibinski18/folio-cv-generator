@@ -1,7 +1,7 @@
 import type { ResumeData } from '../types/resume';
 
 export const sampleResume: ResumeData = {
-  personal: { firstName: 'Aleksandra', lastName: 'Nowak', title: 'Senior Product Designer', email: 'aleksandra.nowak@example.com', phone: '+48 501 234 567', location: 'Warszawa, Polska', website: 'aleksandranowak.design' },
+  personal: { firstName: 'Aleksandra', lastName: 'Nowak', title: 'Senior Product Designer', email: 'aleksandra.nowak@example.com', phone: '+48 501 234 567', location: 'Warszawa, Polska', website: 'aleksandranowak.design', photo: '' },
   summary: 'Projektuję produkty cyfrowe, które łączą potrzeby ludzi z celami biznesowymi. Od 7 lat pomagam zespołom zamieniać złożone problemy w proste, intuicyjne doświadczenia. Łączę myślenie strategiczne, badania i dbałość o każdy detal.',
   experience: [
     { id: 'exp-1', company: 'Docplanner', role: 'Senior Product Designer', location: 'Warszawa · hybrydowo', startDate: '2022-03', endDate: '', current: true, description: 'Projektowanie doświadczeń dla platformy medycznej obsługującej ponad 20 mln pacjentów miesięcznie.', bullets: [
