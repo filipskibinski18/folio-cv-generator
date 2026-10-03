@@ -1,98 +1,147 @@
 # Folio — Studio CV
 
-Kompletny generator CV w języku polskim: React 19, TypeScript, Vite, Tailwind CSS, Zustand, dnd-kit, React PDF oraz docx. Wszystkie dane i szablony są zapisywane lokalnie. Eksport odbywa się w przeglądarce, bez wysyłania CV na serwer.
+Nowoczesny, zaawansowany generator i edytor CV z polskim i angielskim interfejsem: **React 19**, **TypeScript**, **Vite**, **Tailwind CSS**, **Zustand**, **dnd-kit**, **React PDF**, **PDF.js** oraz **docx**.
 
-## Uruchomienie
+Aplikacja działa w **100% lokalnie w przeglądarce**: dane, zdjęcia i szablony przechowywane są w pamięci lokalnej (`localStorage`), eksport PDF i DOCX odbywa się po stronie klienta, a import plików PDF/DOCX nie wymaga żadnych zewnętrznych serwerów, modeli AI ani płatnych kluczy API. Żadna treść dokumentu nie opuszcza Twojego urządzenia.
 
-Wymagany Node.js 22.12+ lub 24 LTS. Projekt zawiera `pnpm-lock.yaml`.
+---
+
+## Główne możliwości
+
+- 🎯 **Optymalizator ATS**:
+  - Interaktywny moduł analizy CV pod kątem systemów Applicant Tracking System (ATS).
+  - Wklejanie treści oferty pracy i obliczanie procentowego wskaźnika dopasowania (ATS Score: 0–100%).
+  - Analiza słów kluczowych: lista wykrytych oraz brakujących umiejętności i technologii z przyciskiem natychmiastowego dodania (`+`) do Twojego CV.
+  - Weryfikacja metryk i mierzalnych osiągnięć w opisach stanowisk i projektów.
+  - Lista kontrolna dobrych praktyk ATS (układ jednokolumnowy, czytelność nagłówków, czcionki, marginesy).
+  - Szybki eksport 1-kliknięciem w wariancie dedykowanym dla ATS (zarówno wektorowy PDF, jak i DOCX).
+- 🖱️ **Bezpośrednia edycja z podglądu (Click-to-edit)**:
+  - Kliknij dowolny element w oknie podglądu (imię, dane kontaktowe, zdjęcie, nagłówek sekcji czy konkretne stanowisko w historii pracy), aby natychmiast otworzyć jego dedykowany formularz w lewym panelu edytora.
+  - Wyraźne podświetlenie edytowanego elementu i szybki powrót („Wróć do listy” / klawisz Escape).
+- 🎨 **60 profesjonalnych szablonów i Style w 1 kliknięcie**:
+  - Gotowe szablony podzielone na 7 kategorii: **Minimalistyczne**, **Klasyczne**, **Biznesowe**, **Kreatywne**, **Eleganckie**, **Techniczne** i **Artystyczne**, a także kategoria **Moje** na własne kompozycje.
+  - Filtry szablonów według układu kolumn, obecności zdjęcia czy stylu oraz zintegrowana wyszukiwarka.
+  - „Styl w 1 kliknięcie” (Design Presets): harmonijnie dobrane palety barw i parowania typograficzne.
+  - Możliwość zapisu, duplikowania, edycji oraz eksportu/importu własnych kompozycji szablonów.
+- 📥 **Lokalny import PDF i DOCX**:
+  - Zaawansowany parser działający po stronie klienta (PDF.js + JSZip) obsługujący pliki do 15 MB.
+  - Rozpoznawanie sekcji, danych kontaktowych, dat, wielopoziomowych punktów, technologii i linków.
+  - Okno podglądu rozpoznanych danych przed ich zastosowaniem, opcja zachowania obecnego zdjęcia oraz pełna możliwość cofnięcia operacji (Undo).
+- 🖼️ **Zaawansowany edytor zdjęcia**:
+  - Obsługa formatów JPG, PNG i WebP (do 10 MB / 40 MP).
+  - Intuicyjne powiększanie (zoom) i precyzyjne przesuwanie kadru w obu osiach.
+  - Kształty ramki: koło, zaokrąglony prostokąt, kwadrat, portret, a także regulacja obramowania i rozmiaru w mm.
+  - Automatyczne skalowanie po stronie klienta do 512 × 512 px w celu optymalizacji pamięci.
+- 🌐 **Wielojęzyczność (i18n)**:
+  - Przełącznik języka interfejsu (PL / EN).
+  - Niezależne ustawienie języka dokumentu CV („Język CV”), które automatycznie dostosowuje standardowe etykiety sekcji oraz formatowanie dat bez naruszania wpisanej treści.
+- 🔤 **9 lokalnych rodzin fontów**:
+  - Inter, Lora, Roboto, Montserrat, Playfair Display, Source Sans 3, Oswald, Cormorant Garamond oraz Caveat.
+  - Pełne wsparcie dla polskich znaków diakrytycznych, fonty serwowane w całości lokalnie (licencja SIL OFL).
+- 📄 **Podwójny silnik eksportu**:
+  - **PDF (A4)**: wektorowy, generowany w Web Workerze bez blokowania interfejsu. Rzeczywisty podział stron, ochrona nagłówków przed wiszeniem na dole strony (orphans/widows), powtarzanie nagłówków kolumn i zachowanie zaznaczalnego tekstu.
+  - **DOCX (Word)**: natywne style, tabele kolumn, hiperłącza, listy wypunktowane i osadzone czcionki TTF, z opcją formatu jednokolumnowego ATS.
+- 💾 **Kopia zapasowa i historia**:
+  - Eksport i import całych projektów do formatu JSON z rygorystyczną walidacją Zod.
+  - Pełna historia operacji Undo/Redo (do 40 stanów) dostępna z przycisków w nagłówku oraz skrótów klawiszowych (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z).
+
+---
+
+## Wymagania i instalacja
+
+Wymagany **Node.js 20+** (zalecany Node.js 22.12+ lub 24 LTS).
 
 ```sh
-pnpm install --frozen-lockfile
-pnpm dev
-```
-
-Alternatywnie, z npm:
-
-```sh
+# Instalacja zależności
 npm install
+# lub: pnpm install --frozen-lockfile
+
+# Uruchomienie serwera deweloperskiego
 npm run dev
+# lub: pnpm dev
 ```
 
-Otwórz http://127.0.0.1:5173. Aplikacja od razu pokazuje realistyczne, wypełnione CV.
+Aplikacja będzie dostępna pod adresem: **http://127.0.0.1:5173**.
 
-```sh
-pnpm test          # walidacja, historia, szablony, struktura DOCX, fonty i paginacja PDF
-pnpm build         # ścisła kontrola TypeScript + produkcyjny build
-pnpm preview       # podgląd produkcyjnego buildu
-```
+---
 
-Nie jest wymagany backend, konto, klucz API ani płatna usługa. Gotowy katalog `dist/` można udostępnić na hostingu plików statycznych przez HTTP/HTTPS. Przy publikacji w podkatalogu ustaw `base` w `vite.config.ts` przed kompilacją. Fonty PDF/DOCX uwzględniają ten prefiks. Otwieranie `index.html` przez `file://` nie obsługuje modułów i workerów.
+## Polecenia i skrypty
 
-## Korzystanie
+| Polecenie | Opis |
+| :--- | :--- |
+| `npm run dev` | Uruchomienie lokalnego serwera deweloperskiego Vite |
+| `npm test` | Uruchomienie zestawu testów Vitest (PDF, DOCX, ATS, parser, i18n, design) |
+| `npm run build` | Ścisła kontrola TypeScript (`tsc -b`), budowa aplikacji klienta i serwera produkcyjnego |
+| `npm run preview` | Podgląd zbudowanej aplikacji klienckiej przez Vite |
+| `npm start` | Uruchomienie zoptymalizowanego, lokalnego serwera produkcyjnego (`node dist-server/index.mjs`) |
 
-- **Treść**: edycja danych kontaktowych, podsumowania, doświadczenia, edukacji, kategorii umiejętności i poziomów, projektów, certyfikatów, języków, linków i klauzuli. W doświadczeniu i projektach dostępne są punkty i podpunkty, maksymalnie cztery poziomy. `**tekst**` oznacza pogrubienie w opisie i punktach.
-- **Zdjęcie**: „Dane osobowe → Dodaj zdjęcie” przyjmuje JPG, PNG i WEBP do 10 MB / 40 megapikseli. Edytor pozwala powiększyć kadr i przesunąć go w obu osiach. Obraz jest lokalnie kadrowany do kwadratu i zmniejszany do 512 × 512 px, aby oszczędzać miejsce w localStorage. Można go zmienić lub usunąć. Zdjęcie pozostaje częścią danych CV po zmianie szablonu i trafia do kopii projektu JSON.
-- **Wygląd**: dwa niezależne fonty, rozmiary tekstu/nagłówków/nazwiska, interlinia, tracking, sześć kolorów, cztery marginesy w mm, odstępy, padding, zaokrąglenia i separatory. Dodatkowo trzy kompozycje nagłówka, trzy style tytułów sekcji oraz widoczność, kształt (koło/zaokrąglone/kwadrat), pozycja i rozmiar zdjęcia (20–40 mm).
-- **Układ**: jedna kolumna, lewa lub prawa belka o szerokości 25–45%, Modern Grid oraz listy, tagi lub poziomy umiejętności. Rozwiń sekcję, aby zmienić jej nagłówek i przypisać kolumnę. Widoczność zmienia ikona oka.
-- **Przeciąganie**: użyj uchwytu obok sekcji. Klawiaturą: ustaw fokus na uchwycie, naciśnij spację, użyj strzałek i zatwierdź spacją. Kolejność obowiązuje wewnątrz przypisanej kolumny; w jednym słupku jest globalna. Klauzula jako ostatnia sekcja główna zajmuje pełną szerokość pod kolumnami. Po jej przeniesieniu obowiązuje nowa pozycja.
-- **Szablony**: osiem presetów — Modern (zielona lewa kolumna), Executive (klasyczny szeryfowy), Creative (terakota i tagi), Blueprint (granatowy baner), Editorial (burgundowa typografia), Nordic (turkus i prawa kolumna), Atelier (ciepły Modern Grid), Midnight (fioletowy baner, jedna kolumna). W każdym domyślnie widoczna jest ramka na zdjęcie. Zapis własnego szablonu przechowuje motyw, ustawienia zdjęcia i sekcji. Można go załadować, sklonować, zmienić nazwę/zapisać nowy wygląd, usunąć i wyeksportować do JSON. Dane osoby i samo zdjęcie nie są częścią szablonu.
-- **JSON**: „Eksportuj CV → Kopia projektu” zapisuje wszystkie dane i motyw. „Importuj JSON” rozpoznaje projekt lub szablon, sprawdza wersję 1, strukturę, dopuszczalne parametry oraz limit 2 MB. Błędny import nie nadpisuje dokumentu.
-- **Cofanie**: przyciski w nagłówku; poza polem tekstowym także Ctrl/Cmd+Z i Ctrl/Cmd+Shift+Z. Do 40 stanów danych/motywu. Historia pozostaje w pamięci bieżącej sesji. Wpisywanie w polu obsługuje również natywne cofanie przeglądarki.
-- **Telefon**: przełącznik „Podgląd / Edytor” zachowuje dostęp do wszystkich paneli. Podgląd można powiększać i dopasowywać do dostępnej szerokości.
+Zmienne środowiskowe `HOST` (domyślnie `127.0.0.1`) i `PORT` (domyślnie `4173`) sterują parametrami lokalnego serwera. Przykładową konfigurację zawiera plik `.env.example`.
 
-## Eksport i zgodność
+---
 
-### PDF
-
-`ResumeDocument` jest jedynym rendererem dokumentu. Pracuje w Web Workerze, dzięki czemu układanie stron nie blokuje formularzy. Podgląd wykorzystuje PDF.js do pokazania dokładnie tego samego PDF wraz z zaznaczalną warstwą tekstu. Odświeżanie jest opóźnione o 350 ms; ostatnie trzy wyniki są buforowane. Eksport pozostaje wektorowy: tekst, linki, linie i tagi nie są screenshotami.
-
-Format A4, marginesy mm → pt, automatyczna paginacja, ochrona wdów/sierot, miejsce po nagłówkach oraz pełne polskie fonty TTF. Długie akapity dzielą się pomiędzy całymi liniami. Długie sekcje i kolumny przechodzą na kolejne strony.
-
-Zdjęcie jest osadzonym obrazem rastrowym, maskowanym zgodnie z kształtem ramki; tekst i pozostałe elementy dokumentu pozostają wektorowe. Bez dodanego zdjęcia renderer pokazuje wektorową sylwetkę i etykietę ramki. Ramkę można wyłączyć w panelu Wygląd.
-
-### DOCX
-
-Natywne `Paragraph`, `TextRun`, `ExternalHyperlink`, listy numerowane jako punktory i edytowalne tabele kolumn. Zachowane są dane, kolejność, widoczność, nagłówki, pogrubienia, hierarchia list, kolory, rozmiary, interlinia, marginesy i podstawowe tagi. Fonty podstawowe obu rodzin są osadzane jako OFL TTF w pliku Worda; pogrubienie pozostaje natywnym formatowaniem tekstu.
-
-Zdjęcie trafia do natywnego `ImageRun` z opisem alternatywnym, w tabeli nagłówka obok edytowalnych danych kandydata. Przy pobieraniu z przeglądarki maska koła lub zaokrąglenia jest zachowana w przezroczystym PNG. Obraz można zaznaczyć, zmienić lub usunąć w Wordzie. Bez zdjęcia nagłówek zawiera miejsce na jego dodanie.
-
-Opcja **„Układ jednokolumnowy dla ATS”** usuwa zdjęcie i ramkę, tabele kolumn oraz tagi graficzne, zachowując tekst oraz listy. Czytelność w konkretnym systemie ATS zależy od jego parsera.
-
-PDF jest formatem wiernego odwzorowania podglądu. DOCX zachowuje treść i edytowalność, ale Word/LibreOffice mają własne algorytmy łamania stron i zastępowania fontów. Zaokrąglenia i identyczna geometria każdego elementu PDF nie mają pełnego odpowiednika w natywnym DOCX. Nie należy traktować DOCX jako identycznego wizualnie, bezstratnego obrazu PDF.
-
-## Struktura
+## Architektura projektu
 
 ```text
 src/
-  types/resume.ts             # modele wywiedzione ze schematów Zod
-  data/                      # dane demonstracyjne i trzy presety
-  store/useResumeStore.ts    # persist, bezpieczna hydratacja i historia
-  components/editor/         # formularze, DnD, kontrolki, szablony
-  components/preview/        # wspólny dokument, fonty, canvas + tekst PDF.js
-  services/exportPdf.ts      # klient Workera i bufor PDF
-  services/pdf.worker.ts     # sekwencyjne renderowanie wektorowe
-  services/exportDocx.ts     # mapper natywnego Worda + osadzone fonty
-  services/projectJson.ts    # import/eksport wersjonowanych plików
-  lib/                       # formatowanie, jednostki i bezpieczny storage
-  __tests__/                 # testy danych, stanu i dokumentów
-public/fonts/                # statyczne fonty i licencje OFL
-scripts/export-smoke.mjs      # eksport wszystkich presetów i stress test
+├── types/resume.ts             # Silne typy TypeScript i schematy walidacyjne Zod
+├── data/
+│   ├── sampleResume.ts         # Realistyczne, przykładowe dane początkowe CV
+│   ├── presets.ts              # 60 wbudowanych szablonów dokumentu
+│   ├── designPresets.ts        # Presety typograficzne i kolorystyczne (Style w 1 kliknięcie)
+│   └── templateCategories.ts   # Kategoryzacja i filtrowanie szablonów
+├── store/
+│   ├── useResumeStore.ts       # Główny magazyn stanu Zustand z persist i historią (Undo/Redo)
+│   └── useLocaleStore.ts       # Stan języka interfejsu aplikacji (PL / EN)
+├── components/
+│   ├── ImportCvDialog.tsx      # Modal importu dokumentów PDF i DOCX
+│   ├── ExportDialog.tsx        # Modal wyboru formatu eksportu (PDF, DOCX, JSON)
+│   ├── editor/
+│   │   ├── AtsOptimizer.tsx    # Skaner zgodności z ATS, analiza słów kluczowych i eksport ATS
+│   │   ├── SelectedElementEditor.tsx # Kontekstowy edytor wybranego na podglądzie elementu
+│   │   ├── DataEditor.tsx      # Formularze edycji sekcji i danych osobowych
+│   │   ├── ThemeEditor.tsx     # Konfiguracja kolorów, typografii, geometrii i układu
+│   │   ├── TemplateManager.tsx # Przeglądarka 60 szablonów i zarządzanie własnymi motywami
+│   │   ├── PhotoEditor.tsx     # Kadrowanie, powiększanie i dopasowanie zdjęcia
+│   │   └── SectionList.tsx     # Zarządzanie sekcjami i przeciąganie dnd-kit
+│   └── preview/
+│       ├── ResumeDocument.tsx  # Wektorowy renderer dokumentu w React PDF
+│       ├── ResumePreview.tsx   # Interaktywny podgląd PDF.js z warstwą tekstu i detekcją kliknięć
+│       └── fonts.ts            # Rejestracja rodzin fontów TTF
+├── services/
+│   ├── cvParser.ts             # Parser plików PDF i DOCX oparty na lokalnych regułach
+│   ├── renderResume.tsx        # Zunifikowany potok renderowania i pomiaru sekcji
+│   ├── exportPdf.ts            # Klient Web Workera i generowanie plików PDF
+│   ├── pdf.worker.ts           # Web Worker renderowania wektorowego
+│   ├── exportDocx.ts           # Generator natywnego formatu Word (.docx) z osadzonymi czcionkami
+│   └── projectJson.ts          # Eksport i bezpieczny import plików JSON
+├── lib/
+│   ├── i18n.ts & english.json  # Tłumaczenia interfejsu (PL / EN)
+│   ├── cvLanguage.ts           # Tłumaczenia i formatowanie nagłówków samego CV
+│   ├── previewTargets.ts       # Adapter mapowania współrzędnych PDF na elementy edytora
+│   ├── sectionIcons.ts         # Zestaw wektorowych ikon dla sekcji i kontaktów
+│   ├── photo.ts                # Narzędzia przetwarzania grafiki na Canvas
+│   └── format.ts               # Pomocnicze funkcje formatowania dat, tekstu i jednostek mm/pt
+└── __tests__/                  # Testy jednostkowe i integracyjne (ATS, parser, PDF, DOCX, motywy)
+server/
+└── index.ts                    # Lekki serwer HTTP do hostowania wersji produkcyjnej
+public/fonts/                   # Lokalne pliki TrueType (.ttf) i licencje SIL Open Font License
+scripts/
+├── build-server.mjs            # Kompilator serwera produkcyjnego do dist-server/
+├── export-smoke.mjs            # Skrypt testowy generujący próbki wszystkich szablonów
+└── prepare_fonts.py            # Opcjonalny skrypt przygotowania fontów
 ```
 
-Nową sekcję dodaje się w `sectionIds`, schemacie danych, etykietach, edytorze, rendererze PDF i mapperze DOCX. Modele `ResumeData` i `ResumeTheme` mają jawne, silne typy. Schematy Zod kontrolują także dane z localStorage i importowanych plików.
+---
 
-## Fonty, prywatność i trwałość
+## Bezpieczeństwo i prywatność
 
-Inter, Lora i Roboto są lokalne; licencje znajdują się w `public/fonts/*-OFL.txt`. Pełne fonty PDF są statycznymi instancjami otwartych źródeł [Google Fonts](https://github.com/google/fonts). Normalne działanie aplikacji nie pobiera zasobów z Google ani CDN. Opcjonalny skrypt `scripts/prepare_fonts.py` regeneruje pliki i wymaga Python + `fonttools`; nie jest potrzebny do uruchomienia aplikacji.
+1. **Praca offline**: Aplikacja nie wykonuje żadnych zewnętrznych zapytań sieciowych w trakcie pracy. Wszystkie fonty, biblioteki i skrypty serwowane są lokalnie.
+2. **Prywatność danych**: Wprowadzane dane osobowe, zdjęcia oraz załączane pliki PDF/DOCX są przetwarzane wyłącznie w pamięci przeglądarki i zapisywane w lokalnym magazynie `localStorage` użytkownika.
+3. **Brak telemetrii**: Kod nie zawiera żadnych skryptów śledzących, analityki ani modułów wysyłających zdarzenia.
+4. **Zgodność z CSP**: Aplikacja nie wymaga zewnętrznych połączeń CDN. Do poprawnego działania wymaga jedynie uprawnień dla lokalnych Web Workerów oraz `blob:` dla silnika PDF.js.
 
-Stan jest przechowywany pod kluczem `folio-resume-v1` w localStorage. Czyszczenie danych witryny lub zmiana domeny/przeglądarki usuwa dostęp do tej kopii. Warto zachować eksport JSON. Brak miejsca lub wyłączony storage jest sygnalizowany; edycja działa dalej w pamięci. Dane przykładowe są fikcyjne. Aplikacja nie zawiera analityki ani telemetrii aplikacyjnej.
+---
 
-Starsze projekty JSON i zapisane motywy z wersji 1 pozostają zgodne: brakujące pola zdjęcia, nagłówka i stylu sekcji są uzupełniane wartościami domyślnymi. Import zdjęcia akceptuje wyłącznie lokalny JPEG/PNG jako data URL; adresy zewnętrzne i SVG są odrzucane.
+## Licencja
 
-## Weryfikacja
-
-Testy sprawdzają walidację importów i motywów, zgodność starszych plików, kadr zdjęcia, zapis zdjęcia po zmianie szablonu, historię, błąd quota, polskie znaki, natywną strukturę Worda i osadzony obraz, fonty, ATS, długie listy, kompletność wielostronicowych kolumn, A4, marginesy i zachowanie wektorowego tekstu PDF. `node scripts/export-smoke.mjs` tworzy w ignorowanym katalogu `test-results/` PDF, DOCX, JSON oraz PNG każdej strony ośmiu presetów, wariantów ze zdjęciem i długiego CV. Generuje też anonimowy portret diagnostyczny do sprawdzenia uploadu i kadrowania. To materiały diagnostyczne, nie część buildu produkcyjnego.
-
-Podczas wdrożenia hosting musi obsługiwać workery i lokalne pliki fontów. Przy restrykcyjnym CSP dopuść workery z własnej domeny oraz `blob:` dla PDF.js, lokalne fonty i inline styles wymagane przez renderer/zmienne CSS. Aplikacja wymaga nowoczesnej przeglądarki obsługującej modułowe workery, Canvas i API używane przez PDF.js. Interfejs zweryfikowano w przeglądarce opartej na Chromium. Aplikacja nie realizuje synchronizacji kont ani kopii w chmurze.
-
-Dokumentacja bibliotek: [React PDF](https://react-pdf.org/), [docx](https://docx.js.org/), [Tailwind + Vite](https://tailwindcss.com/docs/installation/using-vite).
+Projekt jest udostępniony na licencji MIT. Użyte kroje pisma podlegają licencji [SIL Open Font License (OFL)](https://scripts.sil.org/OFL).

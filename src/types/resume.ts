@@ -55,25 +55,47 @@ export type Certificate = z.infer<typeof certificateSchema>;
 export type Language = z.infer<typeof languageSchema>;
 export type ResumeLink = z.infer<typeof linkSchema>;
 
-export const fontNames = ['Inter', 'Lora', 'Roboto'] as const;
+export const fontNames = ['Inter', 'Lora', 'Roboto', 'Montserrat', 'PlayfairDisplay', 'SourceSans3', 'Oswald', 'CormorantGaramond', 'Caveat'] as const;
 export type FontName = (typeof fontNames)[number];
 export const layoutNames = ['single', 'sidebar-left', 'sidebar-right', 'grid'] as const;
 export type LayoutName = (typeof layoutNames)[number];
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Wymagany kolor HEX, np. #25564a.');
 export const resumeThemeSchema = z.object({
+  language: z.enum(['pl', 'en']).default('pl'),
+  keepSectionsTogether: z.boolean().default(true),
+  design: z.object({
+    entryStyle: z.enum(['plain', 'timeline', 'table', 'cards']),
+    decoration: z.enum(['none', 'rule', 'corner', 'frame', 'orbit', 'dots']),
+    nameStyle: z.enum(['natural', 'uppercase', 'stacked']),
+    contactPlacement: z.enum(['header', 'sidebar']),
+    contactIcons: z.boolean(),
+    skillMeter: z.enum(['numbers', 'dots', 'bars']),
+    sidebarPadding: z.number().min(8).max(24),
+    continuationGap: z.number().min(18).max(40),
+  }).default({ entryStyle: 'plain', decoration: 'none', nameStyle: 'natural', contactPlacement: 'header', contactIcons: false, skillMeter: 'numbers', sidebarPadding: 12, continuationGap: 24 }),
+  icons: z.object({ style: z.enum(['none', 'outline', 'circle', 'square']), size: z.number().min(10).max(22) }).default({ style: 'none', size: 14 }),
   headerStyle: z.enum(['accent', 'banner', 'centered']).default('accent'),
   sectionStyle: z.enum(['underline', 'filled', 'plain']).default('underline'),
-  photo: z.object({ isVisible: z.boolean(), shape: z.enum(['circle', 'rounded', 'square']), size: z.number().min(20).max(40), position: z.enum(['left', 'right']) }).default({ isVisible: true, shape: 'circle', size: 26, position: 'right' }),
+  photo: z.object({
+    isVisible: z.boolean(),
+    shape: z.enum(['circle', 'rounded', 'portrait-rounded', 'portrait', 'square']).default('circle'),
+    size: z.number().min(16).max(70),
+    position: z.enum(['sidebar', 'left', 'right', 'center', 'top-left']).default('right'),
+    borderWidth: z.number().min(0).max(6).optional(),
+    borderColor: z.union([z.enum(['auto', 'accent', 'white', 'separator', 'none']), color]).optional(),
+  }).default({ isVisible: true, shape: 'circle', size: 26, position: 'right' }),
   typography: z.object({ fontFamily: z.enum(fontNames), headingFont: z.enum(fontNames), baseSize: z.number().min(8).max(14), headingSize: z.number().min(10).max(20), nameSize: z.number().min(20).max(44), lineHeight: z.number().min(1.1).max(1.9), tracking: z.number().min(-0.2).max(2) }),
   colors: z.object({ accent: color, background: color, text: color, muted: color, separator: color, sidebar: color }),
   geometry: z.object({ margins: z.object({ top: z.number().min(8).max(30), right: z.number().min(8).max(30), bottom: z.number().min(8).max(30), left: z.number().min(8).max(30) }), sectionPadding: z.number().min(0).max(12), sectionGap: z.number().min(6).max(28), blockGap: z.number().min(3).max(18), radius: z.number().min(0).max(12), lineWidth: z.number().min(0).max(3), columnGap: z.number().min(8).max(30) }),
   layout: z.enum(layoutNames), sidebarWidth: z.number().min(25).max(45),
   skillStyle: z.enum(['text', 'tags', 'levels']),
-  sections: z.array(z.object({ id: z.enum(sectionIds), title: short, isVisible: z.boolean(), column: z.enum(['main', 'sidebar']) })).length(sectionIds.length).refine(items => new Set(items.map(item => item.id)).size === sectionIds.length, 'Sekcje muszą mieć unikalne identyfikatory.'),
+  sections: z.array(z.object({ id: z.enum(sectionIds), title: short, icon: z.enum(['auto', 'none', 'user', 'briefcase', 'book', 'code', 'award', 'globe', 'link', 'shield']).default('auto'), isVisible: z.boolean(), column: z.enum(['main', 'sidebar']) })).length(sectionIds.length).refine(items => new Set(items.map(item => item.id)).size === sectionIds.length, 'Sekcje muszą mieć unikalne identyfikatory.'),
 });
 export type ResumeTheme = z.infer<typeof resumeThemeSchema>;
-export interface ResumeTemplate { id: string; name: string; description: string; theme: ResumeTheme; createdAt: string; updatedAt: string; builtIn: boolean }
-export const templateSchema = z.object({ id, name: z.string().min(1).max(80), description: short, theme: resumeThemeSchema, createdAt: z.string(), updatedAt: z.string(), builtIn: z.boolean() });
+export const templateCategoryIds = ['minimal', 'classic', 'business', 'creative', 'editorial', 'technical', 'artistic', 'personal'] as const;
+export type TemplateCategory = typeof templateCategoryIds[number];
+export interface ResumeTemplate { id: string; name: string; description: string; theme: ResumeTheme; categories?: TemplateCategory[]; createdAt: string; updatedAt: string; builtIn: boolean }
+export const templateSchema = z.object({ id, name: z.string().min(1).max(80), description: short, theme: resumeThemeSchema, categories: z.array(z.enum(templateCategoryIds)).max(8).optional(), createdAt: z.string(), updatedAt: z.string(), builtIn: z.boolean() });
 export const projectFileSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('folio-resume'), version: z.literal(1), name: short, data: resumeDataSchema, theme: resumeThemeSchema }),
   z.object({ kind: z.literal('folio-template'), version: z.literal(1), template: templateSchema }),

@@ -15,8 +15,10 @@ try {
   const { sampleResume } = await vite.ssrLoadModule('/src/data/sampleResume.ts');
   const { presets } = await vite.ssrLoadModule('/src/data/presets.ts');
   const { ResumeDocument } = await vite.ssrLoadModule('/src/components/preview/ResumeDocument.tsx');
+  const { extractPreviewRegions, continuationHeadings } = await vite.ssrLoadModule('/src/lib/previewTargets.ts');
+  const { sectionIconSvg } = await vite.ssrLoadModule('/src/lib/sectionIcons.ts');
   const { createDocxDocument } = await vite.ssrLoadModule('/src/services/exportDocx.ts');
-  for (const family of ['Inter', 'Lora', 'Roboto']) Font.register({ family, fonts: [400, 700].map(fontWeight => ({ src: resolve('public/fonts', `${family}-${fontWeight}.ttf`), fontWeight })) });
+  for (const family of ['Inter', 'Lora', 'Roboto', 'Montserrat', 'PlayfairDisplay', 'SourceSans3', 'Oswald', 'CormorantGaramond', 'Caveat']) Font.register({ family, fonts: [400, 700].map(fontWeight => ({ src: resolve('public/fonts', `${family}-${fontWeight}.ttf`), fontWeight })) });
   Font.registerHyphenationCallback(word => [word]);
   // A generated diagnostic portrait exercises uploads without using personal photos.
   const sourcePhoto = createCanvas(640, 960); const photoContext = sourcePhoto.getContext('2d');
@@ -32,7 +34,11 @@ try {
   long.languages = Array.from({ length: 18 }, (_, i) => ({ id: `lang-${i}`, name: `Język ${i + 1}`, level: 'C1 · zaawansowany' }));
   const jobs = [...presets.map(preset => ({ name: preset.id, data: sampleResume, theme: preset.theme })), ...['modern', 'creative', 'blueprint', 'nordic'].map(id => ({ name: `${id}-photo`, data: photoData, theme: presets.find(preset => preset.id === id).theme })), { name: 'stress', data: long, theme: presets[0].theme }];
   for (const job of jobs) {
-    const buffer = await renderToBuffer(ResumeDocument(job));
+    let regions = []; const onRender = result => { regions = extractPreviewRegions(result); };
+    let buffer = await renderToBuffer(ResumeDocument({ ...job, onRender }));
+    const continuations = continuationHeadings(regions, job.theme);
+    const sidebarPages = [...new Set(regions.filter(region => region.column === 'sidebar').map(region => region.page))];
+    if (regions.some(region => region.page > 1)) buffer = await renderToBuffer(ResumeDocument({ ...job, continuations, sidebarPages, onRender }));
     await writeFile(resolve(output, `${job.name}.pdf`), buffer);
     const fonts = await Promise.all([...new Set([job.theme.typography.fontFamily, job.theme.typography.headingFont])].map(async name => ({ name, data: await readFile(resolve('public/fonts', `${name}-400.ttf`)) })));
     let portrait;
@@ -42,7 +48,9 @@ try {
       context.beginPath(); context.roundRect(0, 0, 512, 512, radius); context.clip(); context.drawImage(await loadImage(job.data.personal.photo), 0, 0, 512, 512);
       portrait = canvas.toBuffer('image/png');
     }
-    await writeFile(resolve(output, `${job.name}.docx`), await Packer.toBuffer(createDocxDocument(job.data, job.theme, false, fonts, portrait)));
+    const icons = {};
+    for (const section of job.theme.sections) { const svg = sectionIconSvg(section, job.theme); if (!svg) continue; const icon = createCanvas(96, 96); icon.getContext('2d').drawImage(await loadImage(Buffer.from(svg)), 0, 0, 96, 96); icons[section.id] = icon.toBuffer('image/png'); }
+    await writeFile(resolve(output, `${job.name}.docx`), await Packer.toBuffer(createDocxDocument(job.data, job.theme, false, fonts, portrait, icons)));
     await writeFile(resolve(output, `${job.name}.json`), JSON.stringify({ kind: 'folio-resume', version: 1, name: `CV ${job.name}`, data: job.data, theme: job.theme }, null, 2));
     const document = await getDocument({ data: new Uint8Array(buffer) }).promise;
     for (let i = 1; i <= document.numPages; i++) {
@@ -53,7 +61,7 @@ try {
       await writeFile(resolve(output, `${job.name}-${i}.png`), canvas.toBuffer('image/png'));
       const operators = await page.getOperatorList();
       if (!job.data.personal.photo && operators.fnArray.includes(OPS.paintImageXObject)) throw new Error(`${job.name}: document unexpectedly rasterized`);
-      if (!(await page.getTextContent()).items.some(item => 'str' in item && item.str.includes('Nowak')) && i === 1) throw new Error(`${job.name}: missing native text`);
+      if (!(await page.getTextContent()).items.some(item => 'str' in item && item.str.toLowerCase().includes('nowak')) && i === 1) throw new Error(`${job.name}: missing native text`);
     }
     console.log(`${job.name}: ${document.numPages} A4 page(s), vector PDF + editable DOCX + JSON, fonts embedded`);
     await document.destroy();

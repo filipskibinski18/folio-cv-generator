@@ -5,6 +5,7 @@ import { sampleResume } from '../data/sampleResume';
 import { resumeDataSchema, resumeThemeSchema, templateSchema } from '../types/resume';
 import type { ResumeData, ResumeTemplate, ResumeTheme, SectionId } from '../types/resume';
 import { uid } from '../lib/format';
+import { withCvLanguage } from '../lib/cvLanguage';
 import { safeStorage } from '../lib/storage';
 
 interface Snapshot { data: ResumeData; theme: ResumeTheme; activeTemplateId: string }
@@ -45,7 +46,7 @@ export const useResumeStore = create<ResumeState>()(persist((set) => ({
     sections.splice(to, 0, sections.splice(from, 1)[0]);
     return { ...historyPatch(state, true), theme: { ...state.theme, sections } };
   }),
-  applyTemplate: template => set(state => ({ ...historyPatch(state, true), theme: structuredClone(template.theme), activeTemplateId: template.id })),
+  applyTemplate: template => set(state => ({ ...historyPatch(state, true), theme: { ...withCvLanguage(structuredClone(template.theme), state.theme.language), keepSectionsTogether: state.theme.keepSectionsTogether }, activeTemplateId: template.id })),
   saveTemplate: name => {
     const id = uid(); const date = new Date().toISOString();
     set(state => ({ templates: [...state.templates, { id, name: name.trim().slice(0, 80) || 'Mój szablon', description: 'Twój własny projekt', theme: structuredClone(state.theme), builtIn: false, createdAt: date, updatedAt: date }], activeTemplateId: id }));

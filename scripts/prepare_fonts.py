@@ -7,8 +7,10 @@ from io import BytesIO
 
 OUTPUT = Path(__file__).resolve().parents[1] / 'public' / 'fonts'
 OUTPUT.mkdir(parents=True, exist_ok=True)
-SOURCES = {'Inter': 'Inter[opsz,wght].ttf', 'Lora': 'Lora[wght].ttf', 'Roboto': 'Roboto[wdth,wght].ttf'}
+SOURCES = {'Inter': 'Inter[opsz,wght].ttf', 'Lora': 'Lora[wght].ttf', 'Roboto': 'Roboto[wdth,wght].ttf', 'Montserrat': 'Montserrat[wght].ttf', 'PlayfairDisplay': 'PlayfairDisplay[wght].ttf', 'SourceSans3': 'SourceSans3[wght].ttf', 'Oswald': 'Oswald[wght].ttf', 'CormorantGaramond': 'CormorantGaramond[wght].ttf', 'Caveat': 'Caveat[wght].ttf'}
 for family, filename in SOURCES.items():
+    if (OUTPUT / f'{family}-700.ttf').exists():
+        continue
     base = f'https://raw.githubusercontent.com/google/fonts/main/ofl/{family.lower()}/'
     from urllib.parse import quote
     raw = urlopen(base + quote(filename), timeout=60).read()

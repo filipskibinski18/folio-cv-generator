@@ -1,13 +1,13 @@
 import type { ResumeData } from '../types/resume';
 export const uid = () => crypto.randomUUID();
-export const fullName = (data: ResumeData) => `${data.personal.firstName} ${data.personal.lastName}`.trim() || 'Twoje CV';
-export const dateLabel = (value: string) => {
+export const fullName = (data: ResumeData, language: 'pl' | 'en' = 'pl') => `${data.personal.firstName} ${data.personal.lastName}`.trim() || (language === 'en' ? 'Your CV' : 'Twoje CV');
+export const dateLabel = (value: string, language: 'pl' | 'en' = 'pl') => {
   const match = /^(\d{4})-(\d{2})$/.exec(value);
   if (!match) return value;
-  const months = ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'];
+  const months = language === 'en' ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] : ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'];
   return `${months[Number(match[2]) - 1] ?? match[2]} ${match[1]}`;
 };
-export const dateRange = (start: string, end: string, current = false) => [dateLabel(start), current ? 'obecnie' : dateLabel(end)].filter(Boolean).join(' — ');
+export const dateRange = (start: string, end: string, current = false, language: 'pl' | 'en' = 'pl') => [dateLabel(start, language), current ? (language === 'en' ? 'Present' : 'obecnie') : dateLabel(end, language)].filter(Boolean).join(' — ');
 export const safeUrl = (url: string): string | undefined => {
   if (!url.trim()) return undefined;
   const value = /^[a-z][a-z0-9+.-]*:/i.test(url) ? url : `https://${url}`;

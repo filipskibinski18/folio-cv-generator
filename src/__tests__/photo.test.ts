@@ -34,9 +34,9 @@ describe('Zdjęcie i zgodność zapisanych projektów', () => {
     }
     expect(resumeThemeSchema.safeParse({ ...defaultTheme, photo: { ...defaultTheme.photo, size: 200 } }).success).toBe(false);
   });
-  it('każdy preset ma widoczną ramkę, a kolekcja obejmuje różne kompozycje', () => {
-    expect(presets).toHaveLength(8); expect(new Set(presets.map(preset => preset.id)).size).toBe(8);
-    expect(presets.every(preset => preset.theme.photo.isVisible)).toBe(true);
+  it('kolekcja obejmuje różne kompozycje ze zdjęciem i bez zdjęcia', () => {
+    expect(presets).toHaveLength(60); expect(new Set(presets.map(preset => preset.id)).size).toBe(60);
+    expect(presets.slice(0, 12).every(preset => preset.theme.photo.isVisible)).toBe(true);
     expect(new Set(presets.map(preset => preset.theme.headerStyle)).size).toBe(3);
     expect(new Set(presets.map(preset => preset.theme.layout)).size).toBe(4);
   });
@@ -51,7 +51,7 @@ describe('Zdjęcie i zgodność zapisanych projektów', () => {
 describe('Zdjęcie w edytowalnym dokumencie Word', () => {
   it('osadza obraz jako natywny ImageRun zamiast rasteryzować CV', async () => {
     const data = { ...sampleResume, personal: { ...sampleResume.personal, photo: testPhoto } };
-    for (const preset of presets) {
+    for (const preset of presets.filter(p => p.theme.photo.isVisible)) {
       const zip = await JSZip.loadAsync(await Packer.toBuffer(createDocxDocument(data, preset.theme)));
       const xml = await zip.file('word/document.xml')!.async('string');
       expect(xml).toContain('<w:drawing>'); expect(xml).toContain('Zdjęcie profilowe'); expect(xml).toContain('Aleksandra Nowak');

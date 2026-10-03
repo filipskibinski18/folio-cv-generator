@@ -1,6 +1,12 @@
 export interface PhotoCrop { zoom: number; x: number; y: number }
 export const defaultCrop: PhotoCrop = { zoom: 1, x: 50, y: 50 };
-export const photoRadius = (shape: 'circle' | 'rounded' | 'square', size: number) => shape === 'circle' ? size / 2 : shape === 'rounded' ? size * 0.12 : 0;
+export type PhotoShapeType = 'circle' | 'rounded' | 'portrait-rounded' | 'portrait' | 'square';
+export const photoRadius = (shape: PhotoShapeType | string, size: number) => {
+  if (shape === 'circle') return size / 2;
+  if (shape === 'rounded') return size * 0.14;
+  if (shape === 'portrait-rounded') return size * 0.12;
+  return 0;
+};
 
 /** A square crop in source pixels, shared by the editor and exported image. */
 export function cropRectangle(width: number, height: number, crop: PhotoCrop) {
@@ -31,14 +37,17 @@ export function createPhotoData(image: HTMLImageElement, crop: PhotoCrop): strin
 }
 
 /** Word embeds this masked PNG as a separate, editable picture. */
-export async function photoForDocx(photo: string, shape: 'circle' | 'rounded' | 'square'): Promise<Uint8Array> {
+export async function photoForDocx(photo: string, shape: PhotoShapeType | string): Promise<Uint8Array> {
+  const isPortrait = shape === 'portrait' || shape === 'portrait-rounded';
+  const width = 512;
+  const height = isPortrait ? Math.round(512 * 1.3) : 512;
   const image = new Image();
   await new Promise<void>((resolve, reject) => { image.onload = () => resolve(); image.onerror = () => reject(new Error('Nie można przygotować zdjęcia do Worda.')); image.src = photo; });
-  const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
+  const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
   const context = canvas.getContext('2d');
   if (!context) throw new Error('Przeglądarka nie obsługuje przetwarzania zdjęć.');
-  context.beginPath(); context.roundRect(0, 0, 512, 512, photoRadius(shape, 512)); context.clip();
-  context.drawImage(image, 0, 0, 512, 512);
+  context.beginPath(); context.roundRect(0, 0, width, height, photoRadius(shape, width)); context.clip();
+  context.drawImage(image, 0, 0, width, height);
   const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('Nie można przygotować zdjęcia.')), 'image/png'));
   return new Uint8Array(await blob.arrayBuffer());
 }
