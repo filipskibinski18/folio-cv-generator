@@ -8,6 +8,16 @@ const { getStorageError } = await import('../lib/storage');
 
 beforeEach(() => { useResumeStore.getState().restoreExample(); useResumeStore.setState({ templates: [], history: [], future: [] }); });
 describe('Historia i zapis lokalny', () => {
+  it('zachowuje wybór przenoszenia sekcji po zmianie szablonu, zapisie i cofnięciu', () => {
+    expect(useResumeStore.getState().theme.keepSectionsTogether).toBe(true);
+    useResumeStore.getState().updateTheme({ keepSectionsTogether: false });
+    useResumeStore.getState().applyTemplate(presets[7]);
+    expect(useResumeStore.getState().theme.keepSectionsTogether).toBe(false);
+    expect(JSON.parse(memory.get('folio-resume-v1')!).state.theme.keepSectionsTogether).toBe(false);
+    useResumeStore.getState().updateTheme({ keepSectionsTogether: true });
+    useResumeStore.getState().undo();
+    expect(useResumeStore.getState().theme.keepSectionsTogether).toBe(false);
+  });
   it('cofa i ponawia edycję motywu', () => {
     const before = useResumeStore.getState().theme;
     useResumeStore.getState().applyTemplate(presets[1]); expect(useResumeStore.getState().theme.layout).toBe('single');

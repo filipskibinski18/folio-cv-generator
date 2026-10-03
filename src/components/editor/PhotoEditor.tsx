@@ -71,7 +71,7 @@ export function PhotoEditor({ initialShowSettings = false }: { initialShowSettin
     <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" aria-label={tr("Wybierz zdjęcie profilowe")} onChange={event => { const file = event.target.files?.[0]; if (file) void load(file); event.target.value = ''; }} />
 
     {showSettings && (
-      <div className="photo-settings-card" style={{ marginTop: 14, padding: 12, border: '1px solid #e2e8dc', borderRadius: 8, background: '#fafcf8' }}>
+      <div className="photo-settings-card" style={{ marginTop: 14, padding: 12, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--ui-input)' }}>
         <label className="check-field">
           <input type="checkbox" checked={theme.photo.isVisible} onChange={event => updateTheme({ photo: { ...theme.photo, isVisible: event.target.checked } })} />{tr("Pokaż zdjęcie lub ramkę na CV")}</label>
         <div className="field-grid">

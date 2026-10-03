@@ -65,7 +65,7 @@ export const resumeThemeSchema = z.object({
   keepSectionsTogether: z.boolean().default(true),
   design: z.object({
     entryStyle: z.enum(['plain', 'timeline', 'table', 'cards']),
-    decoration: z.enum(['none', 'rule', 'corner', 'frame', 'orbit', 'dots']),
+    decoration: z.enum(['none', 'rule', 'corner', 'frame', 'orbit', 'dots', 'arch', 'ribbon', 'contour', 'mosaic']),
     nameStyle: z.enum(['natural', 'uppercase', 'stacked']),
     contactPlacement: z.enum(['header', 'sidebar']),
     contactIcons: z.boolean(),
@@ -75,7 +75,7 @@ export const resumeThemeSchema = z.object({
   }).default({ entryStyle: 'plain', decoration: 'none', nameStyle: 'natural', contactPlacement: 'header', contactIcons: false, skillMeter: 'numbers', sidebarPadding: 12, continuationGap: 24 }),
   icons: z.object({ style: z.enum(['none', 'outline', 'circle', 'square']), size: z.number().min(10).max(22) }).default({ style: 'none', size: 14 }),
   headerStyle: z.enum(['accent', 'banner', 'centered']).default('accent'),
-  sectionStyle: z.enum(['underline', 'filled', 'plain']).default('underline'),
+  sectionStyle: z.enum(['underline', 'filled', 'plain', 'rail', 'capsule']).default('underline'),
   photo: z.object({
     isVisible: z.boolean(),
     shape: z.enum(['circle', 'rounded', 'portrait-rounded', 'portrait', 'square']).default('circle'),

@@ -1,0 +1,121 @@
+/* Interface colors are independent of the CV and template preview palettes. */
+:root {
+  color-scheme: light;
+  --ui-surface: #ffffff;
+  --ui-input: #fafcf8;
+  --ui-text: #1f2937;
+  --ui-secondary: #374151;
+  --ui-muted: #6b7280;
+  --ui-border: #e5e7eb;
+  --ui-border-soft: #f3f4f6;
+  --ui-input-border: #d1d5db;
+  --ui-blue: #1e3a5f;
+  --ui-success: #15803d;
+  --ui-success-text: #166534;
+  --ui-success-bg: #f0fdf4;
+  --ui-success-border: #bbf7d0;
+  --ui-warning: #b45309;
+  --ui-warning-text: #92400e;
+  --ui-warning-bg: #fffbeb;
+  --ui-warning-border: #fde68a;
+  --ui-danger: #b91c1c;
+  --ui-danger-bg: #fef2f2;
+  --ui-progress-warning: #d97706;
+}
+
+.theme-toggle { width: 34px; height: 34px; border: 1px solid var(--border); flex-shrink: 0; }
+.theme-toggle[aria-pressed=true] { color: var(--forest); background: var(--ui-input); }
+
+:root[data-theme=dark] {
+  color-scheme: dark;
+  color: #e3ece7;
+  background: #111916;
+  --forest: #8ed1b2;
+  --forest-dark: #a7dfc4;
+  --ink: #e3ece7;
+  --muted: #a2b3aa;
+  --border: #33463c;
+  --ui-surface: #1b2721;
+  --ui-input: #16201b;
+  --ui-text: #e3ece7;
+  --ui-secondary: #cad9d0;
+  --ui-muted: #a2b3aa;
+  --ui-border: #33463c;
+  --ui-border-soft: #2b3b32;
+  --ui-input-border: #40564a;
+  --ui-blue: #a9cafa;
+  --ui-success: #8ed1b2;
+  --ui-success-text: #a6e0bf;
+  --ui-success-bg: #1c3629;
+  --ui-success-border: #3d6b50;
+  --ui-warning: #efc079;
+  --ui-warning-text: #f4cd98;
+  --ui-warning-bg: #352b1e;
+  --ui-warning-border: #755b32;
+  --ui-danger: #f3a59c;
+  --ui-danger-bg: #3b2423;
+  --ui-progress-warning: #efc079;
+}
+
+:root[data-theme=dark] :is(.app-header, .editor-panel, .section-accordion, .item-card, .template-card, .dialog, .toast, .secondary-button, .palette-option, .preview-interactive-hint, .preview-page-error) {
+  background: var(--ui-surface);
+  border-color: var(--border);
+  color: var(--ink);
+}
+:root[data-theme=dark] :is(.workspace-heading, .nav-rail, .editor-footer, .preview-footer) { background: #141e1b; border-color: var(--border); }
+:root[data-theme=dark] .preview-panel { background: #111916; }
+:root[data-theme=dark] .preview-scroll { background-image: radial-gradient(#536a5966 .6px, transparent .6px); }
+:root[data-theme=dark] :is(.preview-toolbar, .preview-template > span, .template-actions, .form-content, .control-group, .photo-editor, .editor-note, .bullets-editor .bullets-editor, .photo-crop) { border-color: var(--border); }
+:root[data-theme=dark] :is(.field input, .field select, .field textarea, .skill-edit input, .skill-edit select, .bullet-row textarea, .color-field > div, .language-switch, .zoom-controls, .layout-option, .export-option, .ats-option, .empty-templates, .photo-thumbnail, .photo-placeholder-icon, .photo-crop, .add-button, .import-summary > div) {
+  background: var(--ui-input);
+  color: var(--ink);
+  border-color: var(--border);
+}
+:root[data-theme=dark] .ats-card textarea { background: var(--ui-input); color: var(--ink); }
+:root[data-theme=dark] :is(.field input, .field textarea, .ats-card textarea)::placeholder { color: #81978a; }
+:root[data-theme=dark] :is(.panel-intro h1, .document-name input, .section-trigger, .personal-trigger, .item-card-heading, .group-heading h3, .template-description strong, .own-templates-heading h3, .empty-templates strong, .dialog-heading h2, .export-option strong, .ats-score-copy h3) { color: var(--ink); }
+:root[data-theme=dark] :is(.brand-label, .document-name, .save-status, .icon-button, .text-button, .workspace-breadcrumb, .workspace-chip, .nav-item, .rail-bottom, .overline, .panel-intro p, .editor-footer > span, .section-icon, .section-trigger > svg:last-child, .field > span, .mini-label, .field small, .muted, .editor-note, .list-hint, .check-field, .group-heading p, .color-field, .slider-field > span, .subheading, .template-description > span, .collection-note, .photo-upload-content small, .photo-help, .own-templates-heading > span, .empty-templates p, .panel-footnote, .live-label, .preview-template, .preview-template > span, .preview-caption, .page-index, .render-status, .zoom-controls > span, .paper-size, .preview-end, .dialog-description, .export-option small, .export-privacy, .ats-option p, .template-results, .selected-editor-description, .ats-score-copy p, .ats-score-note) { color: var(--muted); }
+:root[data-theme=dark] :is(.drag-handle, .visibility-button, .section-hidden .section-trigger) { color: #81978a; }
+:root[data-theme=dark] :is(.section-count, .slider-field output, .personal-trigger .section-icon, .toast > span) { background: #2a3f32; color: #b3d1bb; }
+:root[data-theme=dark] :is(.nav-item:hover, .icon-button:hover:not(:disabled), .secondary-button:hover:not(:disabled), .add-button:hover) { background: #2a3f32; color: var(--forest); }
+:root[data-theme=dark] :is(.nav-item.active, .layout-option.selected, .export-option.selected, .palette-option.selected, .photo-upload-content .secondary-button.selected) { background: #263e30; color: var(--forest); border-color: #6c9b7e; }
+:root[data-theme=dark] :is(.section-accordion.expanded, .template-card.active) { border-color: #6c9b7e; }
+:root[data-theme=dark] :is(.primary-button, .brand-icon, .template-check) { color: #10251a; }
+:root[data-theme=dark] .import-cv-cta { background: #27497c; border-color: #41669b; color: #e5eeff; }
+:root[data-theme=dark] .import-cv-cta:hover:not(:disabled) { background: #345b93; }
+:root[data-theme=dark] .cv-import-banner { background: linear-gradient(135deg, #1c2c42, #1d3329); border-color: #3d5c7d; }
+:root[data-theme=dark] .cv-import-banner-content strong { color: #b2d1ff; }
+:root[data-theme=dark] .cv-import-banner-content span { color: #b8c8d1; }
+:root[data-theme=dark] .preview-interactive-hint svg { color: #a9cafa; }
+:root[data-theme=dark] .mini-resume { background: #25332b; }
+:root[data-theme=dark] .template-categories button { background: var(--ui-input); border-color: var(--border); color: var(--muted); }
+:root[data-theme=dark] .template-categories button[aria-pressed=true] { background: var(--forest); color: #10251a; border-color: var(--forest); }
+:root[data-theme=dark] .template-filter button[aria-pressed=true] { color: var(--forest); }
+:root[data-theme=dark] .template-categories button:hover { border-color: var(--forest); }
+:root[data-theme=dark] :is(.format-badge, .preview-end > span, .zoom-controls > i) { border-color: var(--border); }
+:root[data-theme=dark] :is(.preview-end > span, .zoom-controls > i, .section-pagination-toggle input:not(:checked)) { background: var(--border); }
+:root[data-theme=dark] .preview-page { box-shadow: 0 5px 24px #0006, 0 1px 3px #0004; }
+:root[data-theme=dark] .preview-skeleton { background: var(--ui-surface); color: var(--muted); }
+:root[data-theme=dark] .dialog::backdrop { background: #07110ccb; }
+:root[data-theme=dark] :is(.dialog, .toast) { box-shadow: 0 18px 60px #0006; }
+:root[data-theme=dark] :is(.preview-error, .storage-warning) { background: var(--ui-warning-bg); color: var(--ui-warning-text); border-color: var(--ui-warning-border); }
+:root[data-theme=dark] :is(.error-text, .save-error, .save-error svg, .section-hidden .visibility-button) { color: var(--ui-danger); }
+:root[data-theme=dark] .icon-button.danger:hover { color: var(--ui-danger); background: var(--ui-danger-bg); }
+:root[data-theme=dark] .save-status svg { color: var(--forest); }
+:root[data-theme=dark] .save-error svg { color: var(--ui-danger); }
+:root[data-theme=dark] .ats-score-gauge { background: var(--ui-surface); }
+:root[data-theme=dark] .ats-score-progress { background: var(--border); }
+:root[data-theme=dark] .ats-score-banner .ats-simplify { background: #27497c; border-color: #41669b; color: #e5eeff; }
+:root[data-theme=dark] .ats-score-banner .ats-simplify:hover:not(:disabled) { background: #345b93; }
+:root[data-theme=dark] ::selection { background: #385b47; color: #effaf3; }
+:root[data-theme=dark] ::-webkit-scrollbar-thumb { background: #4b6555; }
+:root[data-theme=dark] :is(button, a):focus-visible { outline-color: #8ed1b2; }
+:root[data-theme=dark] :is(input, select, textarea):focus { border-color: #8ed1b2 !important; box-shadow: 0 0 0 3px #8ed1b226; }
+
+/* Keep the header controls reachable on narrow phones. */
+@media (min-width: 461px) and (max-width: 620px) { .document-name { display: none; } }
+@media (max-width: 460px) {
+  .export-button { width: 35px; flex-shrink: 0; }
+  .export-button span { display: none; }
+  .ats-export-actions { flex-wrap: wrap; }
+}

@@ -2,7 +2,7 @@ import { useLocaleStore } from './store/useLocaleStore';
 import { tr } from './lib/i18n';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
-import { ArrowDownToLine, ArrowUpFromLine, Check, ChevronDown, FileText, FileUp, LayoutTemplate, Leaf, Menu, Palette, Redo2, RotateCcw, Rows3, ShieldCheck, Sparkles, Undo2, X } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, Check, ChevronDown, FileText, FileUp, LayoutTemplate, Leaf, Menu, Moon, Palette, Redo2, RotateCcw, Rows3, ShieldCheck, Sparkles, Sun, Undo2, X } from 'lucide-react';
 import { useResumeStore } from './store/useResumeStore';
 import { SectionList } from './components/editor/SectionList';
 import { ThemeEditor, LayoutEditor } from './components/editor/ThemeEditor';
@@ -16,6 +16,7 @@ import { parseProjectJson } from './services/projectJson';
 import { getStorageError, storageEvent } from './lib/storage';
 import { SelectedElementEditor } from './components/editor/SelectedElementEditor';
 import type { EditorTarget } from './lib/previewTargets';
+import { useAppTheme } from './hooks/useAppTheme';
 
 type Tab = 'content' | 'design' | 'layout' | 'templates' | 'ats';
 const tabs = [
@@ -33,6 +34,7 @@ const headings = {
   ats: { overline: 'APPLICANT TRACKING SYSTEM', title: 'Optymalizator ATS.', description: 'Dostosuj CV pod roboty rekrutacyjne i zbadaj zgodność z ogłoszeniem.' },
 };
 export default function App() {
+  const { theme: appTheme, toggleTheme } = useAppTheme();
   const [tab, setTab] = useState<Tab>('content'); const [exportOpen, setExportOpen] = useState(false); const [resetOpen, setResetOpen] = useState(false); const [mobileEditor, setMobileEditor] = useState(true);
   const [importCvOpen, setImportCvOpen] = useState(false); const [droppedCvFile, setDroppedCvFile] = useState<File | null>(null);
   const [toast, setToast] = useState(''); const [storageError, setStorageError] = useState(''); const [importError, setImportError] = useState('');
@@ -97,7 +99,7 @@ export default function App() {
   return <div className="app" style={themeVariables}>
     <header className="app-header"><a className="brand" href="#" aria-label={tr("Folio — studio CV")}><span className="brand-icon"><Leaf size={21} strokeWidth={1.6} /></span><span>{tr("folio")}<span className="brand-period">.</span></span><span className="brand-label">{tr("STUDIO CV")}</span></a>
       <div className="document-name"><FileText size={15} /><input value={store.name} aria-label={tr("Nazwa dokumentu")} maxLength={100} onChange={event => store.setName(event.target.value)} /><ChevronDown size={13} /></div>
-      <div className="header-actions"><select className="language-switch" aria-label={tr("Język strony")} value={locale.language} onChange={event => locale.setLanguage(event.target.value as 'pl' | 'en')}><option value="pl">PL</option><option value="en">EN</option></select><span className={`save-status ${storageError ? 'save-error' : ''}`} title={storageError || tr("Dane zapisane w tej przeglądarce")}>{storageError ? <X size={13} /> : <Check size={13} />}<span>{storageError ? tr("Błąd zapisu") : tr('Zapisano lokalnie')}</span></span><div className="history-actions"><button className="icon-button" title={tr("Cofnij (Ctrl+Z)")} aria-label={tr("Cofnij zmianę")} disabled={!store.history.length} onClick={store.undo}><Undo2 size={17} /></button><button className="icon-button" title={tr("Ponów (Ctrl+Shift+Z)")} aria-label={tr("Ponów zmianę")} disabled={!store.future.length} onClick={store.redo}><Redo2 size={17} /></button></div><button className="primary-button export-button" onClick={() => setExportOpen(true)}><ArrowDownToLine size={15} /><span>{tr("Eksportuj CV")}</span><ChevronDown size={13} /></button></div>
+      <div className="header-actions"><button className="icon-button theme-toggle" onClick={toggleTheme} aria-label={tr("Tryb ciemny")} aria-pressed={appTheme === 'dark'} title={tr(appTheme === 'dark' ? "Włącz tryb jasny" : "Włącz tryb ciemny")}>{appTheme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}</button><select className="language-switch" aria-label={tr("Język strony")} value={locale.language} onChange={event => locale.setLanguage(event.target.value as 'pl' | 'en')}><option value="pl">PL</option><option value="en">EN</option></select><span className={`save-status ${storageError ? 'save-error' : ''}`} title={storageError || tr("Dane zapisane w tej przeglądarce")}>{storageError ? <X size={13} /> : <Check size={13} />}<span>{storageError ? tr("Błąd zapisu") : tr('Zapisano lokalnie')}</span></span><div className="history-actions"><button className="icon-button" title={tr("Cofnij (Ctrl+Z)")} aria-label={tr("Cofnij zmianę")} disabled={!store.history.length} onClick={store.undo}><Undo2 size={17} /></button><button className="icon-button" title={tr("Ponów (Ctrl+Shift+Z)")} aria-label={tr("Ponów zmianę")} disabled={!store.future.length} onClick={store.redo}><Redo2 size={17} /></button></div><button className="primary-button export-button" aria-label={tr("Eksportuj CV")} onClick={() => setExportOpen(true)}><ArrowDownToLine size={15} /><span>{tr("Eksportuj CV")}</span><ChevronDown size={13} /></button></div>
     </header>
     <div className="workspace-heading"><div><span className="workspace-breadcrumb">{tr("TWOJA PRZESTRZEŃ")}<span>/</span></span><strong>{tr("Kreator CV")}</strong><span className="workspace-chip">{tr("Osobisty, jak Ty.")}</span></div><div className="workspace-actions"><button className="primary-button import-cv-cta" title={tr("Wczytaj dane z pliku PDF lub Word (.docx)")} onClick={() => { setDroppedCvFile(null); setImportCvOpen(true); }}><FileUp size={14} /><span>{tr("Wgraj CV (PDF / DOCX)")}</span></button><button className="text-button" aria-label={tr("Importuj JSON")} onClick={() => fileRef.current?.click()}><ArrowUpFromLine size={14} /><span>{tr("Importuj JSON")}</span></button><button className="mobile-toggle secondary-button" onClick={() => setMobileEditor(value => !value)}>{mobileEditor ? <FileText size={15} /> : <Menu size={15} />}{mobileEditor ? tr("Podgląd") : tr("Edytor")}</button></div></div>
     {storageError && <div className="storage-warning" role="alert">{storageError}</div>}

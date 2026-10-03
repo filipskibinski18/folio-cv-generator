@@ -13,12 +13,23 @@ describe('Style catalogue and editable export', () => {
     for (const category of templateCategories) expect(presets.filter(preset => categoriesFor(preset).includes(category.id)).length).toBeGreaterThanOrEqual(4);
     expect(new Set(presets.map(preset => JSON.stringify(preset.theme))).size).toBe(presets.length);
     expect(new Set(presets.map(preset => preset.theme.design.entryStyle)).size).toBe(4);
-    expect(new Set(presets.map(preset => preset.theme.design.decoration)).size).toBe(6);
+    expect(new Set(presets.map(preset => preset.theme.design.decoration)).size).toBe(10);
   });
   it('loads older themes and rejects unsafe geometry', () => {
-    const { design: _design, ...old } = defaultTheme;
+    const { design: _design, keepSectionsTogether: _keep, ...old } = defaultTheme;
+    expect(resumeThemeSchema.parse(old).keepSectionsTogether).toBe(true);
+    expect(resumeThemeSchema.parse({ ...old, keepSectionsTogether: false }).keepSectionsTogether).toBe(false);
     expect(resumeThemeSchema.parse(old).design.sidebarPadding).toBe(12);
     expect(resumeThemeSchema.safeParse({ ...old, design: { ...defaultTheme.design, continuationGap: 0 } }).success).toBe(false);
+  });
+  it('keeps section paragraphs together inside Word columns only when enabled', async () => {
+    for (const enabled of [true, false]) {
+      const zip = await JSZip.loadAsync(await Packer.toBuffer(createDocxDocument(sampleResume, { ...defaultTheme, keepSectionsTogether: enabled })));
+      const xml = await zip.file('word/document.xml')!.async('string');
+      const paragraph = xml.match(/<w:p[ >][\s\S]*?<\/w:p>/g)!.find(value => value.includes('Przeprojektowanie procesu'))!;
+      expect(paragraph.includes('<w:keepNext/>')).toBe(enabled);
+      expect(xml).toContain('HTML / CSS');
+    }
   });
   it('exports native date tables and removes them in ATS', async () => {
     const theme = presets.find(preset => preset.id === 'mono-ledger')!.theme;

@@ -8,6 +8,7 @@ Aplikacja działa w **100% lokalnie w przeglądarce**: dane, zdjęcia i szablony
 
 ## Główne możliwości
 
+- 🌙 **Tryb jasny i ciemny**: przełącznik w nagłówku, zapamiętywanie wyboru i domyślne dopasowanie do ustawień systemu. Motyw interfejsu jest niezależny od kolorów CV i eksportowanych dokumentów.
 - 🎯 **Optymalizator ATS**:
   - Interaktywny moduł analizy CV pod kątem systemów Applicant Tracking System (ATS).
   - Wklejanie treści oferty pracy i obliczanie procentowego wskaźnika dopasowania (ATS Score: 0–100%).
@@ -18,10 +19,10 @@ Aplikacja działa w **100% lokalnie w przeglądarce**: dane, zdjęcia i szablony
 - 🖱️ **Bezpośrednia edycja z podglądu (Click-to-edit)**:
   - Kliknij dowolny element w oknie podglądu (imię, dane kontaktowe, zdjęcie, nagłówek sekcji czy konkretne stanowisko w historii pracy), aby natychmiast otworzyć jego dedykowany formularz w lewym panelu edytora.
   - Wyraźne podświetlenie edytowanego elementu i szybki powrót („Wróć do listy” / klawisz Escape).
-- 🎨 **60 profesjonalnych szablonów i Style w 1 kliknięcie**:
+- 🎨 **100 profesjonalnych szablonów i Style w 1 kliknięcie**:
   - Gotowe szablony podzielone na 7 kategorii: **Minimalistyczne**, **Klasyczne**, **Biznesowe**, **Kreatywne**, **Eleganckie**, **Techniczne** i **Artystyczne**, a także kategoria **Moje** na własne kompozycje.
   - Filtry szablonów według układu kolumn, obecności zdjęcia czy stylu oraz zintegrowana wyszukiwarka.
-  - „Styl w 1 kliknięcie” (Design Presets): harmonijnie dobrane palety barw i parowania typograficzne.
+  - „Styl w 1 kliknięcie” (Design Presets): 12 kompletnych palet zmieniających jednocześnie tło strony i kolumny, tekst, akcenty, separatory oraz ramkę zdjęcia. Każdy ze 100 szablonów ma domyślnie włączone zdjęcie.
   - Możliwość zapisu, duplikowania, edycji oraz eksportu/importu własnych kompozycji szablonów.
 - 📥 **Lokalny import PDF i DOCX**:
   - Zaawansowany parser działający po stronie klienta (PDF.js + JSZip) obsługujący pliki do 15 MB.
@@ -39,8 +40,8 @@ Aplikacja działa w **100% lokalnie w przeglądarce**: dane, zdjęcia i szablony
   - Inter, Lora, Roboto, Montserrat, Playfair Display, Source Sans 3, Oswald, Cormorant Garamond oraz Caveat.
   - Pełne wsparcie dla polskich znaków diakrytycznych, fonty serwowane w całości lokalnie (licencja SIL OFL).
 - 📄 **Podwójny silnik eksportu**:
-  - **PDF (A4)**: wektorowy, generowany w Web Workerze bez blokowania interfejsu. Rzeczywisty podział stron, ochrona nagłówków przed wiszeniem na dole strony (orphans/widows), powtarzanie nagłówków kolumn i zachowanie zaznaczalnego tekstu.
-  - **DOCX (Word)**: natywne style, tabele kolumn, hiperłącza, listy wypunktowane i osadzone czcionki TTF, z opcją formatu jednokolumnowego ATS.
+  - **PDF (A4)**: wektorowy, generowany w Web Workerze bez blokowania interfejsu. Rzeczywisty podział stron. Domyślnie włączone „Przenoś całe sekcje” przenosi sekcje mieszczące się na jednej stronie w całości, także w kolumnach; dłuższe sekcje dzielą się bez utraty treści. Ustawienie zachowuje się przy zmianie szablonu. Nagłówki pozostają z początkiem treści, a tekst można zaznaczać na każdej stronie.
+  - **DOCX (Word)**: natywne style, tabele kolumn, hiperłącza, listy wypunktowane i osadzone czcionki TTF, z opcją formatu jednokolumnowego ATS. Przenoszenie sekcji korzysta z natywnego łączenia akapitów w Wordzie.
 - 💾 **Kopia zapasowa i historia**:
   - Eksport i import całych projektów do formatu JSON z rygorystyczną walidacją Zod.
   - Pełna historia operacji Undo/Redo (do 40 stanów) dostępna z przycisków w nagłówku oraz skrótów klawiszowych (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z).
@@ -86,7 +87,7 @@ src/
 ├── types/resume.ts             # Silne typy TypeScript i schematy walidacyjne Zod
 ├── data/
 │   ├── sampleResume.ts         # Realistyczne, przykładowe dane początkowe CV
-│   ├── presets.ts              # 60 wbudowanych szablonów dokumentu
+│   ├── presets.ts              # 100 wbudowanych szablonów dokumentu
 │   ├── designPresets.ts        # Presety typograficzne i kolorystyczne (Style w 1 kliknięcie)
 │   └── templateCategories.ts   # Kategoryzacja i filtrowanie szablonów
 ├── store/
@@ -100,7 +101,7 @@ src/
 │   │   ├── SelectedElementEditor.tsx # Kontekstowy edytor wybranego na podglądzie elementu
 │   │   ├── DataEditor.tsx      # Formularze edycji sekcji i danych osobowych
 │   │   ├── ThemeEditor.tsx     # Konfiguracja kolorów, typografii, geometrii i układu
-│   │   ├── TemplateManager.tsx # Przeglądarka 60 szablonów i zarządzanie własnymi motywami
+│   │   ├── TemplateManager.tsx # Przeglądarka 100 szablonów i zarządzanie własnymi motywami
 │   │   ├── PhotoEditor.tsx     # Kadrowanie, powiększanie i dopasowanie zdjęcia
 │   │   └── SectionList.tsx     # Zarządzanie sekcjami i przeciąganie dnd-kit
 │   └── preview/

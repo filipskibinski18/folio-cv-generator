@@ -148,10 +148,12 @@ export function AtsOptimizer({ notify }: { notify: (message: string) => void }) 
     };
   }, [jobText, resumeText]);
 
-  // 5. One-click 100% ATS layout transformer
+  // 5. Simplify the layout for recruitment parsers
   const applyAtsOptimization = () => {
     store.updateTheme({
       layout: 'single',
+      icons: { style: 'none', size: 14 },
+      design: { ...theme.design, entryStyle: 'plain', decoration: 'none', nameStyle: 'natural', contactPlacement: 'header', contactIcons: false },
       headerStyle: 'accent',
       sectionStyle: 'underline',
       typography: {
@@ -182,7 +184,7 @@ export function AtsOptimizer({ notify }: { notify: (message: string) => void }) 
         isVisible: false, // Recommended default for strict corporate ATS
       },
     });
-    notify(tr("Zastosowano układ w 100% zgodny z ATS!"));
+    notify(tr("Zastosowano prosty, czytelny układ dla ATS."));
   };
 
   // 6. Quick add missing keyword to skills
@@ -232,101 +234,45 @@ export function AtsOptimizer({ notify }: { notify: (message: string) => void }) 
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 85) return '#15803d'; // Green
-    if (score >= 65) return '#b45309'; // Amber
-    return '#b91c1c'; // Red
+    if (score >= 85) return 'var(--ui-success)'; // Green
+    if (score >= 65) return 'var(--ui-warning)'; // Amber
+    return 'var(--ui-danger)'; // Red
   };
 
   const getScoreBg = (score: number) => {
-    if (score >= 85) return '#f0fdf4';
-    if (score >= 65) return '#fffbeb';
-    return '#fef2f2';
+    if (score >= 85) return 'var(--ui-success-bg)';
+    if (score >= 65) return 'var(--ui-warning-bg)';
+    return 'var(--ui-danger-bg)';
   };
 
   return (
     <div className="ats-optimizer-view" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* 1. Score Summary Banner */}
-      <div 
-        className="ats-score-banner" 
-        style={{ 
-          background: getScoreBg(audit.score), 
-          border: `1px solid ${getScoreColor(audit.score)}40`,
-          borderRadius: 10, 
-          padding: '18px 20px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ 
-              background: getScoreColor(audit.score), 
-              color: '#ffffff', 
-              borderRadius: '50%', 
-              width: 38, 
-              height: 38, 
-              display: 'grid', 
-              placeItems: 'center', 
-              fontWeight: 700, 
-              fontSize: 15 
-            }}>
-              {audit.score}
-            </span>
-            <div>
-              <strong style={{ fontSize: 13, color: '#1f2937', display: 'block' }}>{tr("Wynik zgodności z ATS:")}{audit.score}{tr("/100 pkt")}</strong>
-              <span style={{ fontSize: 10, color: '#4b5563' }}>
-                {audit.score >= 85 
-                  ? tr("Świetnie! Twoje CV ma czytelną strukturę dla parserów rekrutacyjnych.")
-                  : audit.score >= 65
-                  ? tr("Dobre przygotowanie, ale kilka detali poprawi przejście przez filtry.")
-                  : tr("Wymaga optymalizacji. Zalecamy przełączenie na układ 1-kolumnowy.")}
-              </span>
-            </div>
-          </div>
-          <button 
-            className="primary-button" 
-            onClick={applyAtsOptimization}
-            style={{ 
-              fontSize: 10, 
-              padding: '8px 12px', 
-              minHeight: 33, 
-              background: '#1e3a5f',
-              borderColor: '#1e3a5f' 
-            }}
-            title={tr("Automatycznie ustawia 1 kolumnę, czytelny font, standardowe marginesy i ukrywa zdjęcie")}
-          >
-            <Wand2 size={13} />
-            <span>{tr("Zastosuj układ 100% ATS")}</span>
-          </button>
+      <section className="ats-score-banner" style={{ background: getScoreBg(audit.score), borderColor: `color-mix(in srgb, ${getScoreColor(audit.score)} 25%, transparent)` }} aria-label={tr('Ocena czytelności ATS')}>
+        <div className="ats-score-heading">
+          <div className="ats-score-gauge" style={{ borderColor: getScoreColor(audit.score), color: getScoreColor(audit.score) }}><strong>{audit.score}</strong><span>/ 100</span></div>
+          <div className="ats-score-copy"><h3>{tr('Ocena czytelności ATS')}</h3><p>{audit.score >= 85 ? tr('Czytelny układ i dobrze uzupełniona treść.') : audit.score >= 65 ? tr('Dobry początek. Kilka zmian ułatwi odczyt CV.') : tr('Uprość układ i uzupełnij wskazane informacje.')}</p></div>
         </div>
-
-        {/* Progress bar */}
-        <div style={{ height: 6, background: '#e5e7eb', borderRadius: 3, overflow: 'hidden' }}>
-          <div 
-            style={{ 
-              width: `${audit.score}%`, 
-              height: '100%', 
-              background: getScoreColor(audit.score),
-              transition: 'width 0.4s ease' 
-            }} 
-          />
-        </div>
-      </div>
+        <div className="ats-score-progress" role="progressbar" aria-label={tr('Ocena czytelności ATS')} aria-valuenow={audit.score} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${audit.score}%`, background: getScoreColor(audit.score) }} /></div>
+        <p className="ats-score-note">{tr('Ocena orientacyjna — wynik zależy też od systemu rekrutacyjnego.')}</p>
+        <button className="primary-button ats-simplify" onClick={applyAtsOptimization} title={tr("Automatycznie ustawia 1 kolumnę, czytelny font, standardowe marginesy i ukrywa zdjęcie")}><Wand2 size={16} /><span>{tr('Uprość układ dla ATS')}</span></button>
+      </section>
 
       {/* 2. Job Description & Keyword Matcher */}
       <div 
         className="ats-card"
         style={{ 
-          background: '#ffffff', 
-          border: '1px solid #e5e7eb', 
+          background: 'var(--ui-surface)',
+          border: '1px solid var(--ui-border)',
           borderRadius: 10, 
           padding: 16 
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <Search size={16} color="#1e3a5f" />
-          <h3 style={{ fontSize: 12, fontWeight: 600, color: '#1f2937', margin: 0 }}>{tr("Dopasowanie do ogłoszenia o pracę")}</h3>
+          <Search size={16} color="var(--ui-blue)" />
+          <h3 style={{ fontSize: 12, fontWeight: 600, color: 'var(--ui-text)', margin: 0 }}>{tr("Dopasowanie do ogłoszenia o pracę")}</h3>
         </div>
-        <p style={{ fontSize: 10, color: '#6b7280', margin: '0 0 12px', lineHeight: 1.5 }}>{tr("Wklej treść oferty lub wymagania stanowiska, aby sprawdzić, czy Twoje CV zawiera kluczowe frazy poszukiwane przez systemy ATS.")}</p>
+        <p style={{ fontSize: 10, color: 'var(--ui-muted)', margin: '0 0 12px', lineHeight: 1.5 }}>{tr("Wklej treść oferty lub wymagania stanowiska, aby sprawdzić, czy Twoje CV zawiera kluczowe frazy poszukiwane przez systemy ATS.")}</p>
 
         <textarea
           value={jobText}
@@ -337,7 +283,7 @@ export function AtsOptimizer({ notify }: { notify: (message: string) => void }) 
             height: 80,
             fontSize: 11,
             padding: '9px 11px',
-            border: '1px solid #d1d5db',
+            border: '1px solid var(--ui-input-border)',
             borderRadius: 6,
             marginBottom: 12,
             fontFamily: 'inherit'
@@ -347,18 +293,18 @@ export function AtsOptimizer({ notify }: { notify: (message: string) => void }) 
         {keywordAnalysis && (
           <div style={{ animation: 'fadeIn 0.2s ease-in-out' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 11, fontWeight: 600, color: '#374151' }}>{tr("Współczynnik dopasowania:")}{keywordAnalysis.matchPercentage}%
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ui-secondary)' }}>{tr("Współczynnik dopasowania:")}{keywordAnalysis.matchPercentage}%
               </span>
-              <span style={{ fontSize: 10, color: '#6b7280' }}>
+              <span style={{ fontSize: 10, color: 'var(--ui-muted)' }}>
                 {keywordAnalysis.matched.length}{tr("z")}{keywordAnalysis.total}{tr("wykrytych słów kluczowych")}</span>
             </div>
 
-            <div style={{ height: 5, background: '#e5e7eb', borderRadius: 3, overflow: 'hidden', marginBottom: 12 }}>
+            <div style={{ height: 5, background: 'var(--ui-border)', borderRadius: 3, overflow: 'hidden', marginBottom: 12 }}>
               <div 
                 style={{ 
                   width: `${keywordAnalysis.matchPercentage}%`, 
                   height: '100%', 
-                  background: keywordAnalysis.matchPercentage >= 70 ? '#15803d' : '#d97706',
+                  background: keywordAnalysis.matchPercentage >= 70 ? 'var(--ui-success)' : 'var(--ui-progress-warning)',
                   transition: 'width 0.3s ease' 
                 }} 
               />
@@ -367,7 +313,7 @@ export function AtsOptimizer({ notify }: { notify: (message: string) => void }) 
             {/* Matched Keywords */}
             {keywordAnalysis.matched.length > 0 && (
               <div style={{ marginBottom: 12 }}>
-                <span style={{ fontSize: 9, fontWeight: 600, color: '#15803d', display: 'block', marginBottom: 6, letterSpacing: 0.5 }}>{tr("ZNALEZIONE W TWOIM CV (")}{keywordAnalysis.matched.length}):
+                <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--ui-success)', display: 'block', marginBottom: 6, letterSpacing: 0.5 }}>{tr("ZNALEZIONE W TWOIM CV (")}{keywordAnalysis.matched.length}):
                 </span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {keywordAnalysis.matched.map(kw => (
@@ -375,9 +321,9 @@ export function AtsOptimizer({ notify }: { notify: (message: string) => void }) 
                       key={kw}
                       style={{ 
                         fontSize: 9, 
-                        background: '#f0fdf4', 
-                        color: '#166534', 
-                        border: '1px solid #bbf7d0',
+                        background: 'var(--ui-success-bg)',
+                        color: 'var(--ui-success-text)',
+                        border: '1px solid var(--ui-success-border)',
                         borderRadius: 4, 
                         padding: '3px 7px',
                         display: 'inline-flex',
@@ -396,7 +342,7 @@ export function AtsOptimizer({ notify }: { notify: (message: string) => void }) 
             {/* Missing Keywords with 1-click Add */}
             {keywordAnalysis.missing.length > 0 && (
               <div>
-                <span style={{ fontSize: 9, fontWeight: 600, color: '#b45309', display: 'block', marginBottom: 6, letterSpacing: 0.5 }}>{tr("BRAKUJĄCE SŁOWA KLUCZOWE (KLIKNIJ, ABY DODAĆ DO UMIEJĘTNOŚCI):")}</span>
+                <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--ui-warning)', display: 'block', marginBottom: 6, letterSpacing: 0.5 }}>{tr("BRAKUJĄCE SŁOWA KLUCZOWE (KLIKNIJ, ABY DODAĆ DO UMIEJĘTNOŚCI):")}</span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {keywordAnalysis.missing.map(kw => (
                     <button
@@ -405,9 +351,9 @@ export function AtsOptimizer({ notify }: { notify: (message: string) => void }) 
                       className="secondary-button"
                       style={{ 
                         fontSize: 9, 
-                        background: '#fffbeb', 
-                        color: '#92400e', 
-                        borderColor: '#fde68a',
+                        background: 'var(--ui-warning-bg)',
+                        color: 'var(--ui-warning-text)',
+                        borderColor: 'var(--ui-warning-border)',
                         borderRadius: 4, 
                         padding: '3px 8px',
                         minHeight: 25,
@@ -432,22 +378,22 @@ export function AtsOptimizer({ notify }: { notify: (message: string) => void }) 
       <div 
         className="ats-card"
         style={{ 
-          background: '#ffffff', 
-          border: '1px solid #e5e7eb', 
+          background: 'var(--ui-surface)',
+          border: '1px solid var(--ui-border)',
           borderRadius: 10, 
           padding: 16 
         }}
       >
-        <h3 style={{ fontSize: 12, fontWeight: 600, color: '#1f2937', margin: '0 0 12px' }}>{tr("Lista kontrolna parserów ATS")}</h3>
+        <h3 style={{ fontSize: 12, fontWeight: 600, color: 'var(--ui-text)', margin: '0 0 12px' }}>{tr("Lista kontrolna parserów ATS")}</h3>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {/* Item 1: Layout */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, paddingBottom: 10, borderBottom: '1px solid #f3f4f6' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, paddingBottom: 10, borderBottom: '1px solid var(--ui-border-soft)' }}>
             <div style={{ display: 'flex', gap: 9 }}>
-              {audit.isSingleColumn ? <CheckCircle2 size={16} color="#15803d" /> : <AlertCircle size={16} color="#b45309" />}
+              {audit.isSingleColumn ? <CheckCircle2 size={16} color="var(--ui-success)" /> : <AlertCircle size={16} color="var(--ui-warning)" />}
               <div>
-                <strong style={{ fontSize: 11, color: '#1f2937', display: 'block' }}>{tr("Układ jednokolumnowy")}</strong>
-                <span style={{ fontSize: 9.5, color: '#6b7280', lineHeight: 1.4 }}>
+                <strong style={{ fontSize: 11, color: 'var(--ui-text)', display: 'block' }}>{tr("Układ jednokolumnowy")}</strong>
+                <span style={{ fontSize: 9.5, color: 'var(--ui-muted)', lineHeight: 1.4 }}>
                   {audit.isSingleColumn 
                     ? tr("Optymalny układ liniowy. Parsery czytają tekst płynnie bez mieszania kolumn.") 
                     : tr("Układy wielokolumnowe mogą być dzielone przez starsze systemy OCR.")}
@@ -464,14 +410,14 @@ export function AtsOptimizer({ notify }: { notify: (message: string) => void }) 
           </div>
 
           {/* Item 2: Photo */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, paddingBottom: 10, borderBottom: '1px solid #f3f4f6' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, paddingBottom: 10, borderBottom: '1px solid var(--ui-border-soft)' }}>
             <div style={{ display: 'flex', gap: 9 }}>
-              {audit.noPhoto ? <CheckCircle2 size={16} color="#15803d" /> : <AlertCircle size={16} color="#b45309" />}
+              {audit.noPhoto ? <CheckCircle2 size={16} color="var(--ui-success)" /> : <AlertCircle size={16} color="var(--ui-warning)" />}
               <div>
-                <strong style={{ fontSize: 11, color: '#1f2937', display: 'block' }}>
+                <strong style={{ fontSize: 11, color: 'var(--ui-text)', display: 'block' }}>
                   {audit.noPhoto ? tr("Brak zdjęcia (zalecane dla ATS)") : tr("Zdjęcie widoczne")}
                 </strong>
-                <span style={{ fontSize: 9.5, color: '#6b7280', lineHeight: 1.4 }}>{tr("Systemy ATS w korporacjach (szczególnie USA/UK) preferują brak zdjęć. W Polsce dopuszcza się oba warianty.")}</span>
+                <span style={{ fontSize: 9.5, color: 'var(--ui-muted)', lineHeight: 1.4 }}>{tr("Systemy ATS w korporacjach (szczególnie USA/UK) preferują brak zdjęć. W Polsce dopuszcza się oba warianty.")}</span>
               </div>
             </div>
             <button 
@@ -487,12 +433,12 @@ export function AtsOptimizer({ notify }: { notify: (message: string) => void }) 
           </div>
 
           {/* Item 3: Contact info */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, paddingBottom: 10, borderBottom: '1px solid #f3f4f6' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, paddingBottom: 10, borderBottom: '1px solid var(--ui-border-soft)' }}>
             <div style={{ display: 'flex', gap: 9 }}>
-              {audit.hasContact ? <CheckCircle2 size={16} color="#15803d" /> : <AlertCircle size={16} color="#b45309" />}
+              {audit.hasContact ? <CheckCircle2 size={16} color="var(--ui-success)" /> : <AlertCircle size={16} color="var(--ui-warning)" />}
               <div>
-                <strong style={{ fontSize: 11, color: '#1f2937', display: 'block' }}>{tr("Kompletne dane kontaktowe")}</strong>
-                <span style={{ fontSize: 9.5, color: '#6b7280', lineHeight: 1.4 }}>
+                <strong style={{ fontSize: 11, color: 'var(--ui-text)', display: 'block' }}>{tr("Kompletne dane kontaktowe")}</strong>
+                <span style={{ fontSize: 9.5, color: 'var(--ui-muted)', lineHeight: 1.4 }}>
                   {audit.hasContact ? tr("Imię, nazwisko, telefon, email i lokalizacja są obecne.") : tr("Uzupełnij telefon, email i lokalizację w nagłówku.")}
                 </span>
               </div>
@@ -500,12 +446,12 @@ export function AtsOptimizer({ notify }: { notify: (message: string) => void }) 
           </div>
 
           {/* Item 4: Quantified results */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, paddingBottom: 10, borderBottom: '1px solid #f3f4f6' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, paddingBottom: 10, borderBottom: '1px solid var(--ui-border-soft)' }}>
             <div style={{ display: 'flex', gap: 9 }}>
-              {audit.hasMetrics ? <CheckCircle2 size={16} color="#15803d" /> : <AlertCircle size={16} color="#b45309" />}
+              {audit.hasMetrics ? <CheckCircle2 size={16} color="var(--ui-success)" /> : <AlertCircle size={16} color="var(--ui-warning)" />}
               <div>
-                <strong style={{ fontSize: 11, color: '#1f2937', display: 'block' }}>{tr("Mierzalne rezultaty (")}{metricsFound}{tr("znalezionych)")}</strong>
-                <span style={{ fontSize: 9.5, color: '#6b7280', lineHeight: 1.4 }}>
+                <strong style={{ fontSize: 11, color: 'var(--ui-text)', display: 'block' }}>{tr("Mierzalne rezultaty (")}{metricsFound}{tr("znalezionych)")}</strong>
+                <span style={{ fontSize: 9.5, color: 'var(--ui-muted)', lineHeight: 1.4 }}>
                   {audit.hasMetrics 
                     ? tr("Świetnie! Liczby i procenty w punktach doświadczenia zwiększają scoring rekrutacyjny.") 
                     : tr("Dodaj liczby i procenty (np. \"wzrost o 25%\", \"zarządzanie zespołem 6 osób\").")}
@@ -517,10 +463,10 @@ export function AtsOptimizer({ notify }: { notify: (message: string) => void }) 
           {/* Item 5: RODO Consent */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
             <div style={{ display: 'flex', gap: 9 }}>
-              {audit.hasConsent ? <CheckCircle2 size={16} color="#15803d" /> : <AlertCircle size={16} color="#b45309" />}
+              {audit.hasConsent ? <CheckCircle2 size={16} color="var(--ui-success)" /> : <AlertCircle size={16} color="var(--ui-warning)" />}
               <div>
-                <strong style={{ fontSize: 11, color: '#1f2937', display: 'block' }}>{tr("Klauzula zgodna z RODO")}</strong>
-                <span style={{ fontSize: 9.5, color: '#6b7280', lineHeight: 1.4 }}>
+                <strong style={{ fontSize: 11, color: 'var(--ui-text)', display: 'block' }}>{tr("Klauzula zgodna z RODO")}</strong>
+                <span style={{ fontSize: 9.5, color: 'var(--ui-muted)', lineHeight: 1.4 }}>
                   {audit.hasConsent 
                     ? 'Zgoda na przetwarzanie danych osobowych jest obecna.' 
                     : tr("Uzupełnij treść klauzuli RODO na dole dokumentu.")}
@@ -535,16 +481,16 @@ export function AtsOptimizer({ notify }: { notify: (message: string) => void }) 
       <div 
         className="ats-card"
         style={{ 
-          background: '#ffffff', 
-          border: '1px solid #e5e7eb', 
+          background: 'var(--ui-surface)',
+          border: '1px solid var(--ui-border)',
           borderRadius: 10, 
           padding: 16 
         }}
       >
-        <h3 style={{ fontSize: 12, fontWeight: 600, color: '#1f2937', margin: '0 0 4px' }}>{tr("Eksport zoptymalizowany dla ATS")}</h3>
-        <p style={{ fontSize: 10, color: '#6b7280', margin: '0 0 12px', lineHeight: 1.4 }}>{tr("Pobierz gotowy dokument sformatowany bezpośrednio pod systemy selekcji kandydatów.")}</p>
+        <h3 style={{ fontSize: 12, fontWeight: 600, color: 'var(--ui-text)', margin: '0 0 4px' }}>{tr("Eksport zoptymalizowany dla ATS")}</h3>
+        <p style={{ fontSize: 10, color: 'var(--ui-muted)', margin: '0 0 12px', lineHeight: 1.4 }}>{tr("Pobierz gotowy dokument sformatowany bezpośrednio pod systemy selekcji kandydatów.")}</p>
 
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div className="ats-export-actions" style={{ display: 'flex', gap: 10 }}>
           <button 
             className="primary-button" 
             onClick={handleDownloadDocx}

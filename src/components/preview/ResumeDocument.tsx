@@ -47,7 +47,7 @@ export function ResumeDocument({ data, theme: t, onRender, continuations = [], s
     <Text style={{ flex: d.contactIcons || isSide ? 1 : undefined, flexShrink: 1, fontSize: type.baseSize - 1, lineHeight: line(type.baseSize - 1), color }}>{!d.contactIcons && !isSide && i > 0 ? '·  ' : ''}{value.includes('@') ? link(value, `mailto:${value}`, color) : value === data.personal.website ? link(urlLabel(value), value, color) : value}</Text>
   </View>)}</View>;
   const keepProjectTogether = (item: ResumeData['projects'][number]) => {
-    if (item.bullets.length) return false;
+    if (!t.keepSectionsTogether || item.bullets.length) return false;
     const pageWidth = mmToPt(210 - g.margins.left - g.margins.right);
     const ratio = (t.layout === 'grid' ? 47 : t.sidebarWidth) / 100;
     const isSidebar = t.sections.find(section => section.id === 'projects')?.column === 'sidebar';
@@ -135,15 +135,17 @@ export function ResumeDocument({ data, theme: t, onRender, continuations = [], s
     const sSep = getSeparatorColor(isSide);
     // Headings are siblings of the content blocks so react-pdf can reserve space
     // for the first entry before splitting a long section across pages.
-    const heading = section.id !== 'consent' && <View data-edit={editTarget(section.id, undefined, 'layout')} wrap={false} minPresenceAhead={type.baseSize * (section.id === 'projects' ? 14 : section.id === 'education' ? 12 : 6)} style={{ paddingTop: g.sectionPadding, paddingHorizontal: g.sectionPadding, flexShrink: 0 }}>
+    const heading = section.id !== 'consent' && <View data-edit={editTarget(section.id, undefined, 'layout')} wrap={false} minPresenceAhead={type.baseSize * (section.id === 'education' ? 12 : 6)} style={{ paddingTop: g.sectionPadding, paddingHorizontal: g.sectionPadding, flexShrink: 0 }}>
       <View style={{
         flexDirection: 'row', alignItems: 'center', gap: 7,
         borderBottomColor: sSep,
         borderBottomWidth: t.sectionStyle === 'underline' ? g.lineWidth : 0,
-        backgroundColor: t.sectionStyle === 'filled' ? (isSide && isDarkSidebar ? 'rgba(255, 255, 255, 0.12)' : c.sidebar) : undefined,
-        borderRadius: t.sectionStyle === 'filled' ? g.radius : 0,
-        padding: t.sectionStyle === 'filled' ? '4 6' : 0,
-        paddingBottom: t.sectionStyle === 'filled' ? 4 : t.sectionStyle === 'plain' ? 2 : 4,
+        backgroundColor: ['filled', 'capsule'].includes(t.sectionStyle) ? (isSide && isDarkSidebar ? 'rgba(255, 255, 255, 0.12)' : c.sidebar) : undefined,
+        borderRadius: t.sectionStyle === 'capsule' ? 12 : t.sectionStyle === 'filled' ? g.radius : 0,
+        borderLeftWidth: t.sectionStyle === 'rail' ? 2 : 0, borderLeftColor: sAccent,
+        paddingLeft: t.sectionStyle === 'rail' ? 8 : undefined,
+        padding: ['filled', 'capsule'].includes(t.sectionStyle) ? '4 6' : 0,
+        paddingBottom: ['filled', 'capsule'].includes(t.sectionStyle) ? 4 : t.sectionStyle === 'plain' ? 2 : 4,
         marginBottom: 6,
       }}>
         {t.icons.style !== 'none' && sectionIconPath(section) && <View style={{ width: t.icons.size, height: t.icons.size, backgroundColor: t.icons.style === 'outline' ? undefined : sAccent, borderRadius: t.icons.style === 'circle' ? t.icons.size / 2 : 2, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Svg width={t.icons.size * (t.icons.style === 'outline' ? 1 : .7)} height={t.icons.size * (t.icons.style === 'outline' ? 1 : .7)} viewBox="0 0 24 24"><Path d={sectionIconPath(section)!} stroke={t.icons.style === 'outline' ? sAccent : contrastColor(sAccent)} strokeWidth={1.7} fill="none" strokeLinecap="round" strokeLinejoin="round" /></Svg></View>}
@@ -290,6 +292,10 @@ export function ResumeDocument({ data, theme: t, onRender, continuations = [], s
         {d.decoration === 'frame' && <Rect x={14} y={14} width={567.28} height={813.89} fill="none" stroke={c.accent} strokeWidth={.7} opacity={.35} />}
         {d.decoration === 'corner' && <Path d="M475 0H595V120Z M0 742V842H100Z" fill={c.accent} opacity={.07} />}
         {d.decoration === 'orbit' && <><Circle cx={555} cy={45} r={85} fill="none" stroke={c.accent} strokeWidth={1} opacity={.12} /><Circle cx={580} cy={20} r={110} fill="none" stroke={c.accent} strokeWidth={.5} opacity={.14} /></>}
+        {d.decoration === 'arch' && <><Path d="M502 5V28a42 42 0 0 0 84 0V5 M511 5V28a33 33 0 0 0 66 0V5" fill="none" stroke={c.accent} strokeWidth={1.2} opacity={.17} /><Path d="M9 826v-23a32 32 0 0 1 64 0v23" fill="none" stroke={c.accent} strokeWidth={.8} opacity={.13} /></>}
+        {d.decoration === 'ribbon' && <><Rect x={0} y={0} width={595.28} height={8} fill={c.accent} /><Rect x={0} y={8} width={595.28} height={5} fill={c.sidebar} /><Rect x={0} y={838} width={595.28} height={4} fill={c.accent} opacity={.25} /></>}
+        {d.decoration === 'contour' && Array.from({ length: 5 }, (_, i) => <Path key={i} d={`M420 ${i * 6 + 2} Q510 ${i * 6 + 30} 595 ${i * 6 + 4} M0 ${808 + i * 6} Q60 ${780 + i * 6} 150 ${808 + i * 6}`} fill="none" stroke={c.accent} strokeWidth={.6} opacity={.17} />)}
+        {d.decoration === 'mosaic' && <><Rect x={558} y={12} width={20} height={20} fill={c.accent} opacity={.17} /><Rect x={541} y={20} width={12} height={12} fill="none" stroke={c.accent} strokeWidth={.6} opacity={.3} /><Circle cx={564} cy={41} r={5} fill={c.accent} opacity={.1} /><Rect x={14} y={813} width={14} height={14} fill={c.accent} opacity={.14} /></>}
         {d.decoration === 'dots' && Array.from({ length: 30 }, (_, i) => <Circle key={i} cx={530 + i % 6 * 9} cy={16 + Math.floor(i / 6) * 9} r={1.1} fill={c.accent} opacity={.22} />)}
       </Svg>}
       <View fixed style={{ height: d.continuationGap }} />

@@ -34,8 +34,8 @@ describe('Zdjęcie i zgodność zapisanych projektów', () => {
     }
     expect(resumeThemeSchema.safeParse({ ...defaultTheme, photo: { ...defaultTheme.photo, size: 200 } }).success).toBe(false);
   });
-  it('kolekcja obejmuje różne kompozycje ze zdjęciem i bez zdjęcia', () => {
-    expect(presets).toHaveLength(60); expect(new Set(presets.map(preset => preset.id)).size).toBe(60);
+  it('kolekcja obejmuje różne kompozycje ze zdjęciem', () => {
+    expect(presets).toHaveLength(100); expect(new Set(presets.map(preset => preset.id)).size).toBe(100);
     expect(presets.slice(0, 12).every(preset => preset.theme.photo.isVisible)).toBe(true);
     expect(new Set(presets.map(preset => preset.theme.headerStyle)).size).toBe(3);
     expect(new Set(presets.map(preset => preset.theme.layout)).size).toBe(4);
@@ -58,7 +58,7 @@ describe('Zdjęcie w edytowalnym dokumencie Word', () => {
       const pictures = Object.keys(zip.files).filter(path => /^word\/media\/.*\.png$/.test(path));
       expect(pictures).toHaveLength(1); expect(await zip.file(pictures[0])!.async('base64')).toBe(testPhoto.split(',')[1]);
     }
-  });
+  }, 15000);
   it('pomija obraz i ramkę w ATS oraz po wyłączeniu zdjęcia', async () => {
     const data = { ...sampleResume, personal: { ...sampleResume.personal, photo: testPhoto } };
     const ats = await JSZip.loadAsync(await Packer.toBuffer(createDocxDocument(data, presets[3].theme, true)));

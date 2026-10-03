@@ -10,18 +10,19 @@ export function createDocxDocument(data: ResumeData, theme: ResumeTheme, ats = f
   const { typography: t, geometry: g, design: d } = theme;
   const c = ats ? { ...theme.colors, background: '#ffffff', sidebar: '#ffffff', text: '#182322', muted: '#475569', accent: '#182322' } : theme.colors;
   let sideContext = false;
+  let keepSection = false;
   const darkSide = contrastColor(c.sidebar) === '#ffffff';
   const textColor = (muted = false) => sideContext && darkSide ? (muted ? '#cbd5e1' : '#ffffff') : muted ? c.muted : c.text;
   const accentColor = () => sideContext && darkSide ? '#ffffff' : c.accent;
   const hex = (color: string) => color.slice(1);
   const size = t.baseSize * 2;
   const rich = (text: string, props: { bold?: boolean; color?: string; size?: number; font?: string } = {}) => inlineRuns(text).flatMap(part => part.text.split('\n').map((line, index) => new TextRun({ text: line, break: index > 0 ? 1 : undefined, font: t.fontFamily, size, color: hex(textColor()), ...props, bold: props.bold || part.bold, characterSpacing: Math.round(t.tracking * 20) })));
-  const paragraph = (text: string, muted = false) => new Paragraph({ children: rich(text, { color: hex(textColor(muted)) }), indent: { left: g.sectionPadding * 20, right: g.sectionPadding * 20 }, spacing: { after: 70, line: Math.round(t.lineHeight * 240) }, widowControl: true });
+  const paragraph = (text: string, muted = false) => new Paragraph({ children: rich(text, { color: hex(textColor(muted)) }), indent: { left: g.sectionPadding * 20, right: g.sectionPadding * 20 }, spacing: { after: 70, line: Math.round(t.lineHeight * 240) }, widowControl: true, keepNext: keepSection });
   const title = (value: string) => new Paragraph({ children: rich(value, { bold: true, size: size + 1 }), keepNext: true, spacing: { before: 50, after: 50 } });
-  const meta = (value: string) => new Paragraph({ children: rich(value, { color: hex(textColor(true)), size: size - 2 }), spacing: { after: Math.round(g.blockGap * 10) } });
-  const hyperlink = (label: string, url: string) => new Paragraph({ children: safeUrl(url) ? [new ExternalHyperlink({ link: safeUrl(url)!, children: rich(label, { color: hex(accentColor()) }) })] : rich(label), spacing: { after: 80 }, widowControl: true });
+  const meta = (value: string) => new Paragraph({ children: rich(value, { color: hex(textColor(true)), size: size - 2 }), keepNext: keepSection, spacing: { after: Math.round(g.blockGap * 10) } });
+  const hyperlink = (label: string, url: string) => new Paragraph({ children: safeUrl(url) ? [new ExternalHyperlink({ link: safeUrl(url)!, children: rich(label, { color: hex(accentColor()) }) })] : rich(label), spacing: { after: 80 }, widowControl: true, keepNext: keepSection });
   const bulletParagraphs = (items: Bullet[], depth = 0): Paragraph[] => items.flatMap(item => [
-    new Paragraph({ children: rich(item.text), numbering: { reference: 'resume-bullets', level: depth }, spacing: { after: 60, line: Math.round(t.lineHeight * 240) }, widowControl: true }),
+    new Paragraph({ children: rich(item.text), numbering: { reference: 'resume-bullets', level: depth }, spacing: { after: 60, line: Math.round(t.lineHeight * 240) }, widowControl: true, keepNext: keepSection }),
     ...bulletParagraphs(item.children, depth + 1),
   ]);
   const heading = (section: ResumeTheme['sections'][number]) => new Paragraph({ children: [
@@ -29,15 +30,15 @@ export function createDocxDocument(data: ResumeData, theme: ResumeTheme, ats = f
     new TextRun({ text: section.title.toLocaleUpperCase(theme.language), font: t.headingFont, bold: true, color: hex(accentColor()), size: t.headingSize * 2 }),
   ], heading: HeadingLevel.HEADING_1, keepNext: true,
     spacing: { before: Math.round(g.sectionGap * 20), after: 130 },
-    border: theme.sectionStyle === 'underline' && g.lineWidth ? { bottom: { color: hex(c.separator), style: BorderStyle.SINGLE, size: Math.max(1, Math.round(g.lineWidth * 8)), space: 4 } } : undefined,
-    shading: theme.sectionStyle === 'filled' && !ats ? { fill: hex(c.sidebar), type: ShadingType.CLEAR } : undefined,
+    border: theme.sectionStyle === 'rail' ? { left: { color: hex(accentColor()), style: BorderStyle.SINGLE, size: 12, space: 6 } } : theme.sectionStyle === 'underline' && g.lineWidth ? { bottom: { color: hex(c.separator), style: BorderStyle.SINGLE, size: Math.max(1, Math.round(g.lineWidth * 8)), space: 4 } } : undefined,
+    shading: ['filled', 'capsule'].includes(theme.sectionStyle) && !ats ? { fill: hex(c.sidebar), type: ShadingType.CLEAR } : undefined,
   });
   const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
   const tableBorders = { top: noBorder, left: noBorder, bottom: noBorder, right: noBorder, insideHorizontal: noBorder, insideVertical: noBorder };
   const entryBlock = (children: Paragraph[]): (Paragraph | Table)[] => {
     if (ats || !['timeline', 'cards'].includes(d.entryStyle)) return children;
     return [new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: { ...tableBorders, left: { style: BorderStyle.SINGLE, size: d.entryStyle === 'cards' ? 18 : 8, color: hex(accentColor()) } },
-      rows: [new TableRow({ children: [new TableCell({ children, margins: { left: 180, right: 100, top: d.entryStyle === 'cards' ? 150 : 0, bottom: 100 }, shading: d.entryStyle === 'cards' ? { fill: hex(darkSide ? sideContext ? c.sidebar : c.background : c.sidebar), type: ShadingType.CLEAR } : undefined })] })] }), new Paragraph({ spacing: { after: g.blockGap * 20, line: 20 } })];
+      rows: [new TableRow({ children: [new TableCell({ children, margins: { left: 180, right: 100, top: d.entryStyle === 'cards' ? 150 : 0, bottom: 100 }, shading: d.entryStyle === 'cards' ? { fill: hex(darkSide ? sideContext ? c.sidebar : c.background : c.sidebar), type: ShadingType.CLEAR } : undefined })] })] }), new Paragraph({ keepNext: keepSection, spacing: { after: g.blockGap * 20, line: 20 } })];
   };
   const dateTable = (date: string, children: Paragraph[]): Table => new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: tableBorders,
     rows: [new TableRow({ cantSplit: true, children: [new TableCell({ children: [meta(date)], width: { size: 27, type: WidthType.PERCENTAGE }, margins: { top: 0, bottom: 0, left: 0, right: 180 } }), new TableCell({ children, width: { size: 73, type: WidthType.PERCENTAGE }, margins: { top: 0, bottom: 0, left: 0, right: 0 } })] })] });
@@ -54,19 +55,27 @@ export function createDocxDocument(data: ResumeData, theme: ResumeTheme, ats = f
         const details = item.description ? [paragraph(item.description, true)] : [];
         return !ats && d.entryStyle === 'table' ? [dateTable(dateRange(item.startDate, item.endDate, false, theme.language), identity), ...details] : entryBlock([...identity, meta(dateRange(item.startDate, item.endDate, false, theme.language)), ...details]);
       });
-      case 'skills': return data.skills.flatMap(category => [title(category.name), ...(theme.skillStyle === 'tags' && !ats ? [new Paragraph({ children: category.skills.flatMap(skill => [new TextRun({ text: ` ${skill.name} `, font: t.fontFamily, size, color: hex(textColor()), shading: { fill: hex(c.sidebar), type: ShadingType.CLEAR } }), new TextRun('  ')]), spacing: { after: Math.round(g.blockGap * 20) }, widowControl: true })] : category.skills.map(skill => paragraph(`${skill.name}${theme.skillStyle === 'levels' && skill.level ? ` — ${!ats && d.skillMeter !== 'numbers' ? '●'.repeat(skill.level) + '○'.repeat(5 - skill.level) : `${skill.level}/5`}` : ''}`)))]);
+      case 'skills': return data.skills.flatMap(category => [title(category.name), ...(theme.skillStyle === 'tags' && !ats ? [new Paragraph({ children: category.skills.flatMap(skill => [new TextRun({ text: ` ${skill.name} `, font: t.fontFamily, size, color: hex(textColor()), shading: { fill: hex(c.sidebar), type: ShadingType.CLEAR } }), new TextRun('  ')]), spacing: { after: Math.round(g.blockGap * 20) }, widowControl: true, keepNext: keepSection })] : category.skills.map(skill => paragraph(`${skill.name}${theme.skillStyle === 'levels' && skill.level ? ` — ${!ats && d.skillMeter !== 'numbers' ? '●'.repeat(skill.level) + '○'.repeat(5 - skill.level) : `${skill.level}/5`}` : ''}`)))]);
       case 'projects': return data.projects.flatMap(item => entryBlock([title(item.name), ...(item.role ? [meta(item.role)] : []), paragraph(item.description), ...bulletParagraphs(item.bullets), ...(item.technologies.length ? [meta(item.technologies.join(' · '))] : []), ...(item.url ? [hyperlink(urlLabel(item.url), item.url)] : [])]));
       case 'certificates': return data.certificates.flatMap(item => entryBlock([title(item.name), meta([item.issuer, item.date].filter(Boolean).join(' · ')), ...(item.url ? [hyperlink(urlLabel(item.url), item.url)] : [])]));
       case 'languages': return data.languages.flatMap(item => entryBlock([title(item.name), paragraph(item.level, true)]));
       case 'links': return data.links.flatMap(item => [hyperlink(item.label || urlLabel(item.url), item.url), meta(urlLabel(item.url))]);
-      case 'consent': return [new Paragraph({ children: rich(data.consent, { size: Math.max(14, size - 4), color: hex(c.muted) }), spacing: { before: 220 }, widowControl: true })];
+      case 'consent': return [new Paragraph({ children: rich(data.consent, { size: Math.max(14, size - 4), color: hex(c.muted) }), spacing: { before: 220 }, widowControl: true, keepNext: keepSection })];
     }
   };
   const visible = theme.sections.filter(section => section.isVisible && (typeof data[section.id] === 'string' ? Boolean((data[section.id] as string).trim()) : (data[section.id] as unknown[]).length > 0));
   const tail = visible.at(-1);
   const footer = !ats && theme.layout !== 'single' && tail?.id === 'consent' && tail.column === 'main' ? tail : undefined;
   const sections = visible.filter(section => section !== footer);
-  const render = (section: ResumeTheme['sections'][number], isSide = false) => { sideContext = isSide; return section.id === 'consent' ? sectionBody(section.id) : [heading(section), ...sectionBody(section.id)]; };
+  const render = (section: ResumeTheme['sections'][number], isSide = false) => {
+    sideContext = isSide; keepSection = theme.keepSectionsTogether;
+    const children = section.id === 'consent' ? sectionBody(section.id) : [heading(section), ...sectionBody(section.id)];
+    keepSection = false;
+    // Word's native paragraph chain works inside column cells too. Word can
+    // still paginate chains longer than a full page instead of clipping them.
+    if (theme.keepSectionsTogether) children.push(new Paragraph({ children: [new TextRun({ text: '', size: 2 })], keepNext: false, spacing: { before: 0, after: 0, line: 1 } }));
+    return children;
+  };
   const banner = !ats && theme.headerStyle === 'banner';
   const headerColor = banner ? contrastColor(c.accent) : c.text;
   const alignment = theme.headerStyle === 'centered' && !ats ? AlignmentType.CENTER : AlignmentType.LEFT;

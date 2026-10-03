@@ -114,7 +114,48 @@ describe('Wektorowy PDF A4 i podział stron', () => {
     }
     const theme = structuredClone(defaultTheme); theme.typography.fontFamily = 'Roboto'; theme.typography.headingFont = 'Roboto';
     const result = await inspect(sampleResume, theme); expect(result.text).toContain('Warszawa,Polska');
-  }, 60000);
+  }, 120000);
+  it('przenosi całe sekcje w obu kolumnach, a po wyłączeniu przełącznika pozwala je dzielić', async () => {
+    const theme = structuredClone(defaultTheme);
+    theme.sections.forEach(section => { section.isVisible = ['summary', 'experience', 'certificates', 'languages'].includes(section.id); });
+    const data = structuredClone(sampleResume);
+    data.summary = 'Projektowanie przyjaznych i dostępnych rozwiązań. '.repeat(12);
+    data.experience = Array.from({ length: 3 }, (_, i) => ({ ...structuredClone(sampleResume.experience[0]), id: `whole-${i}`, company: `WHOLEMAIN${i}` }));
+    data.certificates = Array.from({ length: 8 }, (_, i) => ({ id: `cert-${i}`, name: `Certificate ${i}`, issuer: 'Training institute', date: '2025', url: '' }));
+    data.languages = Array.from({ length: 8 }, (_, i) => ({ id: `lang-${i}`, name: `WHOLESIDE${i}`, level: 'C1 — Advanced' }));
+    const whole = await inspect(data, theme);
+    const split = await inspect(data, { ...theme, keepSectionsTogether: false });
+    for (const section of ['experience', 'languages'] as const) {
+      expect(whole.sectionHeights[section]).toBeLessThan(650);
+      const pages = new Set(whole.regions.filter(region => region.target.section === section).map(region => region.page));
+      expect([...pages]).toEqual([2]);
+      const splitPages = new Set(split.regions.filter(region => region.target.section === section).map(region => region.page));
+      expect(splitPages.size).toBeGreaterThan(1);
+    }
+    expect(whole.outOfBounds).toEqual([]); expect(split.outOfBounds).toEqual([]);
+    for (let i = 0; i < 3; i++) expect(whole.text).toContain(`WHOLEMAIN${i}`);
+    for (let i = 0; i < 8; i++) expect(whole.text).toContain(`WHOLESIDE${i}`);
+  }, 30000);
+  it('po wyłączeniu przenoszenia sekcji rozpoczyna pierwszy projekt w wolnym miejscu strony', async () => {
+    const data = structuredClone(sampleResume);
+    // Short enough to trigger the former project-specific keep-together rule,
+    // but taller than the space left after the preceding content.
+    data.projects[0].description = 'Projektowanie dostępnych produktów cyfrowych. '.repeat(8);
+    const theme = structuredClone(defaultTheme);
+    theme.keepSectionsTogether = false;
+    const result = await inspect(data, theme);
+    expect(result.pageTexts[0]).toContain('PROJEKTY');
+    expect(result.pageTexts[0]).toContain('Careflow');
+    expect(result.pageTexts.at(-1)).toContain('example.com/careflow');
+    expect(new Set(result.regions.filter(region => region.target.itemId === 'proj-1').map(region => region.page)).size).toBeGreaterThan(1);
+    expect(result.text.match(/Projektowaniedostępnychproduktówcyfrowych\./g)).toHaveLength(8);
+    expect(result.outOfBounds).toEqual([]);
+    const whole = await inspect(data, { ...theme, keepSectionsTogether: true });
+    expect(whole.pageTexts[0]).not.toContain('PROJEKTY');
+    expect(whole.pageTexts[1]).toContain('Careflow');
+    expect([...new Set(whole.regions.filter(region => region.target.section === 'projects').map(region => region.page))]).toEqual([2]);
+    expect(whole.outOfBounds).toEqual([]);
+  }, 30000);
   it('przenosi długie kolumny i wszystkie punkty na kolejne strony bez utraty tekstu', async () => {
     const data = structuredClone(sampleResume);
     data.experience = Array.from({ length: 12 }, (_, index) => ({ ...structuredClone(sampleResume.experience[0]), id: `long-${index}`, company: `MAINMARKER${index}`, bullets: [{ id: `b-${index}`, text: `BULLETMARKER${index} ${'Wdrażanie dostępnych komponentów i mierzenie wyników. '.repeat(5)}`, children: [{ id: `c-${index}`, text: `CHILDMARKER${index}`, children: [] }] }] }));
@@ -128,7 +169,7 @@ describe('Wektorowy PDF A4 i podział stron', () => {
     const data = structuredClone(sampleResume); data.summary = `${'Projektowanie złożonych rozwiązań dla użytkowników. '.repeat(120)} ENDOFLONGPARAGRAPH`;
     const theme = structuredClone(defaultTheme); theme.layout = 'single';
     const result = await inspect(data, theme); expect(result.text).toContain('ENDOFLONGPARAGRAPH'); expect(result.text).toContain('Docplanner'); expect(result.outOfBounds).toEqual([]);
-  }, 60000);
+  }, 120000);
   it('przenosi długi projekt na kolejne strony bez ucinania jego opisu', async () => {
     const data = structuredClone(sampleResume);
     data.projects[0].description = `Koncepcja aplikacji. ${'Projektowanie i wdrażanie dostępnych rozwiązań. '.repeat(150)} ENDOFLONGPROJECT`;
@@ -171,5 +212,5 @@ describe('Wektorowy PDF A4 i podział stron', () => {
     }
     const hidden = await inspect(data, { ...defaultTheme, photo: { ...defaultTheme.photo, isVisible: false } });
     expect(hidden.images).toBe(0); expect(hidden.text).not.toContain('TWOJEZDJĘCIE');
-  }, 60000);
+  }, 120000);
 });

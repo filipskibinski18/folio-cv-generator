@@ -36,7 +36,7 @@ interface LayoutNode {
   children?: LayoutNode[];
 }
 
-// Keep the renderer's internal layout access in one adapter. These rectangles
+// Measure with the final renderer and real column widths, not character counts.
 export function extractSectionHeights(result: unknown): Partial<Record<SectionId, number>> {
   const layout = (result as { _INTERNAL__LAYOUT__DATA_?: LayoutNode })?._INTERNAL__LAYOUT__DATA_;
   const heights: Partial<Record<SectionId, number>> = {};

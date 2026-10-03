@@ -14,5 +14,8 @@ import '@fontsource/lora/latin-ext-500.css';
 import '@fontsource/lora/latin-400.css';
 import '@fontsource/lora/latin-500.css';
 import './styles.css';
+import './appTheme.css';
+import { applyAppTheme, getInitialAppTheme } from './lib/appTheme';
 
+applyAppTheme(getInitialAppTheme());
 createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>);
