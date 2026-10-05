@@ -23,5 +23,6 @@ export const sampleResume: ResumeData = {
   certificates: [{ id: 'cert-1', name: 'UX Design Certificate', issuer: 'Google', date: '2021', url: '' }],
   languages: [{ id: 'lang-1', name: 'Polski', level: 'Ojczysty' }, { id: 'lang-2', name: 'Angielski', level: 'C1 · zaawansowany' }],
   links: [{ id: 'link-1', label: 'LinkedIn', url: 'https://linkedin.com/in/anowak' }, { id: 'link-2', label: 'Portfolio', url: 'https://example.com/portfolio' }],
+  interests: [{ id: 'interest-1', name: 'Fotografia analogowa', description: '' }, { id: 'interest-2', name: 'Wspinaczka', description: '' }, { id: 'interest-3', name: 'Ceramika', description: '' }],
   consent: 'Wyrażam zgodę na przetwarzanie moich danych osobowych zawartych w CV na potrzeby prowadzonego procesu rekrutacyjnego.',
 };

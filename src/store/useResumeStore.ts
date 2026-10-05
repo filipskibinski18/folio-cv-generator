@@ -69,7 +69,7 @@ export const useResumeStore = create<ResumeState>()(persist((set) => ({
     lastHistoryAt = 0;
     return { ...next, history: [...state.history, { data: state.data, theme: state.theme, activeTemplateId: state.activeTemplateId }], future: state.future.slice(1), updatedAt: new Date().toISOString() };
   }),
-  restoreExample: () => set(state => ({ ...historyPatch(state, true), data: structuredClone(sampleResume), theme: structuredClone(presets[0].theme), activeTemplateId: 'modern' })),
+  restoreExample: () => set(state => ({ ...historyPatch(state, true), data: structuredClone(sampleResume), theme: structuredClone((presets.find(preset => preset.id === 'modern') ?? presets[0]).theme), activeTemplateId: 'modern' })),
 }), {
   name: 'folio-resume-v1', version: 1,
   storage: createJSONStorage(() => safeStorage),

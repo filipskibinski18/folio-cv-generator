@@ -8,10 +8,31 @@ export const photoRadius = (shape: PhotoShapeType | string, size: number) => {
   return 0;
 };
 
-/** A square crop in source pixels, shared by the editor and exported image. */
-export function cropRectangle(width: number, height: number, crop: PhotoCrop) {
-  const size = Math.min(width, height) / Math.max(1, Math.min(3, crop.zoom));
-  return { size, x: (width - size) * Math.max(0, Math.min(100, crop.x)) / 100, y: (height - size) * Math.max(0, Math.min(100, crop.y)) / 100 };
+export const maxPhotoZoom = 4;
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+/** Height-to-width ratio of the frame; portraits are 3:4-ish like the PDF frame. */
+export const photoAspect = (shape: PhotoShapeType | string) => shape === 'portrait' || shape === 'portrait-rounded' ? 1.28 : 1;
+/** Smallest zoom that still shows the whole picture inside the frame (≤ 1). */
+export const minPhotoZoom = (width: number, height: number, aspect = 1) => Math.min(1, Math.min(width, height / aspect) / Math.max(width, height / aspect));
+
+/**
+ * The crop window in source pixels, shared by the editor and the exported image.
+ * Zoom 1 covers the frame; below 1 the frame is larger than the photo and the
+ * margins are filled. x/y are 0–100 % positions of the window in its free range.
+ */
+export function cropRectangle(width: number, height: number, crop: PhotoCrop, aspect = 1) {
+  const zoom = clamp(crop.zoom, minPhotoZoom(width, height, aspect), maxPhotoZoom);
+  const cropWidth = Math.min(width, height / aspect) / zoom;
+  const cropHeight = cropWidth * aspect;
+  return { width: cropWidth, height: cropHeight, x: (width - cropWidth) * clamp(crop.x, 0, 100) / 100, y: (height - cropHeight) * clamp(crop.y, 0, 100) / 100 };
+}
+
+/** Moves the crop by a pointer delta measured on a frame `frameWidth` pixels wide. */
+export function panCrop(width: number, height: number, crop: PhotoCrop, aspect: number, frameWidth: number, dx: number, dy: number): PhotoCrop {
+  const rect = cropRectangle(width, height, crop, aspect);
+  const scale = rect.width / frameWidth;
+  const axis = (position: number, delta: number, range: number, current: number) => Math.abs(range) < 0.5 ? current : clamp((position - delta * scale) / range * 100, 0, 100);
+  return { ...crop, x: axis(rect.x, dx, width - rect.width, crop.x), y: axis(rect.y, dy, height - rect.height, crop.y) };
 }
 
 export async function loadLocalPhoto(file: File): Promise<{ image: HTMLImageElement; url: string }> {
@@ -19,35 +40,42 @@ export async function loadLocalPhoto(file: File): Promise<{ image: HTMLImageElem
   if (file.size > 10 * 1024 * 1024) throw new Error('Zdjęcie jest za duże. Maksymalny rozmiar to 10 MB.');
   const url = URL.createObjectURL(file);
   try {
-    const image = new Image();
-    await new Promise<void>((resolve, reject) => { image.onload = () => resolve(); image.onerror = () => reject(new Error('Nie można odczytać tego zdjęcia. Wybierz inny plik.')); image.src = url; });
+    const image = await loadImage(url, 'Nie można odczytać tego zdjęcia. Wybierz inny plik.');
     if (image.naturalWidth * image.naturalHeight > 40_000_000) throw new Error('Zdjęcie ma zbyt dużą rozdzielczość. Wybierz obraz do 40 megapikseli.');
     return { image, url };
   } catch (error) { URL.revokeObjectURL(url); throw error; }
 }
 
-export function createPhotoData(image: HTMLImageElement, crop: PhotoCrop): string {
-  const rect = cropRectangle(image.naturalWidth, image.naturalHeight, crop);
-  const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
+const loadImage = (src: string, message: string) => new Promise<HTMLImageElement>((resolve, reject) => { const image = new Image(); image.onload = () => resolve(image); image.onerror = () => reject(new Error(message)); image.src = src; });
+/** Reopens the saved photo so its framing can be adjusted without a new upload. */
+export const loadSavedPhoto = async (photo: string) => ({ image: await loadImage(photo, 'Nie można odczytać zapisanego zdjęcia.'), url: photo });
+
+export function createPhotoData(image: HTMLImageElement, crop: PhotoCrop, aspect = 1): string {
+  const rect = cropRectangle(image.naturalWidth, image.naturalHeight, crop, aspect);
+  const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = Math.round(512 * aspect);
   const context = canvas.getContext('2d');
   if (!context) throw new Error('Przeglądarka nie obsługuje przetwarzania zdjęć.');
-  context.fillStyle = '#ffffff'; context.fillRect(0, 0, 512, 512);
-  context.drawImage(image, rect.x, rect.y, rect.size, rect.size, 0, 0, 512, 512);
-  return canvas.toDataURL('image/jpeg', 0.86);
+  context.fillStyle = '#ffffff'; context.fillRect(0, 0, canvas.width, canvas.height);
+  // Map the whole image instead of passing an out-of-bounds source rectangle,
+  // which browsers clip inconsistently when the photo is zoomed out.
+  const scale = canvas.width / rect.width;
+  context.imageSmoothingQuality = 'high';
+  context.drawImage(image, -rect.x * scale, -rect.y * scale, image.naturalWidth * scale, image.naturalHeight * scale);
+  return canvas.toDataURL('image/jpeg', 0.88);
 }
 
 /** Word embeds this masked PNG as a separate, editable picture. */
 export async function photoForDocx(photo: string, shape: PhotoShapeType | string): Promise<Uint8Array> {
-  const isPortrait = shape === 'portrait' || shape === 'portrait-rounded';
   const width = 512;
-  const height = isPortrait ? Math.round(512 * 1.3) : 512;
-  const image = new Image();
-  await new Promise<void>((resolve, reject) => { image.onload = () => resolve(); image.onerror = () => reject(new Error('Nie można przygotować zdjęcia do Worda.')); image.src = photo; });
+  const height = Math.round(512 * photoAspect(shape));
+  const image = await loadImage(photo, 'Nie można przygotować zdjęcia do Worda.');
   const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
   const context = canvas.getContext('2d');
   if (!context) throw new Error('Przeglądarka nie obsługuje przetwarzania zdjęć.');
   context.beginPath(); context.roundRect(0, 0, width, height, photoRadius(shape, width)); context.clip();
-  context.drawImage(image, 0, 0, width, height);
+  // Cover the frame without stretching when the saved crop has another ratio.
+  const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+  context.drawImage(image, (width - image.naturalWidth * scale) / 2, (height - image.naturalHeight * scale) / 2, image.naturalWidth * scale, image.naturalHeight * scale);
   const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('Nie można przygotować zdjęcia.')), 'image/png'));
   return new Uint8Array(await blob.arrayBuffer());
 }

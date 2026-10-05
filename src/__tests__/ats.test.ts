@@ -7,7 +7,7 @@ import JSZip from 'jszip';
 
 describe('Optymalizator ATS (Applicant Tracking System)', () => {
   it('kolekcja zawiera także proste presety ze zdjęciem i warianty z ikonami', () => {
-    expect(presets).toHaveLength(100);
+    expect(presets).toHaveLength(115);
     // All 12 presets must place the photo on the left or in the left sidebar
     for (const preset of presets.slice(0, 12)) {
       expect(['sidebar', 'left', 'top-left']).toContain(preset.theme.photo.position);

@@ -1,8 +1,8 @@
 import JSZip from 'jszip';
 import type { TextItem } from 'pdfjs-dist/types/src/display/api';
-import type { ResumeData, Experience, Education, SkillCategory, Language, Certificate, Project, ResumeLink } from '../types/resume';
+import type { ResumeData, Experience, Education, SkillCategory, Language, Certificate, Project, ResumeLink, Interest } from '../types/resume';
 import { resumeDataSchema } from '../types/resume';
-import { uid } from '../lib/format';
+import { cleanUrl, profileName, uid, urlLabel } from '../lib/format';
 
 export interface ParsedCvResult {
   data: ResumeData;
@@ -254,7 +254,7 @@ export function parseDateRange(raw: string): { startDate: string; endDate: strin
   return { startDate: '', endDate: '', current: false };
 }
 
-type SectionKey = 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'certificates' | 'projects' | 'links' | 'consent' | 'unknown';
+type SectionKey = 'summary' | 'experience' | 'education' | 'skills' | 'languages' | 'certificates' | 'projects' | 'links' | 'interests' | 'consent' | 'unknown';
 
 const SECTION_PATTERNS: { key: SectionKey; regex: RegExp }[] = [
   { key: 'summary', regex: /^(?:o mnie|profil(?: zawodowy)?|podsumowanie(?: zawodowe)?|about(?: me)?|summary|professional summary|bio)$/i },
@@ -265,7 +265,8 @@ const SECTION_PATTERNS: { key: SectionKey; regex: RegExp }[] = [
   { key: 'certificates', regex: /^(?:certyfikaty|kursy(?: i szkolenia)?|szkolenia|uprawnienia|certificates|certifications|courses)$/i },
   { key: 'projects', regex: /^(?:projekty(?: i realizacje)?|portfolio|projects|key projects|wybrane projekty)$/i },
   { key: 'links', regex: /^(?:linki|profile(?: społecznościowe)?|social media|portfolio & linki)$/i },
-  { key: 'unknown', regex: /^(?:contact|kontakt|hobbies(?: and interests)?|interests|zainteresowania|driving licen[cs]e|prawo jazdy)$/i },
+  { key: 'interests', regex: /^(?:hobby|hobbies(?: (?:and|&) interests)?|interests|zainteresowania|pasje|zainteresowania i hobby)$/i },
+  { key: 'unknown', regex: /^(?:contact|kontakt|driving licen[cs]e|prawo jazdy)$/i },
   { key: 'consent', regex: /^(?:klauzula(?: rodo)?|zgoda na przetwarzanie danych|rodo|gdpr|consent)$/i },
 ];
 
@@ -627,6 +628,17 @@ export function parseCvText(fullText: string): ParsedCvResult {
   if (website) {
     links.push({ id: uid(), label: 'Portfolio / Profil', url: website.startsWith('http') ? website : `https://${website}` });
   }
+  // Profile URLs from a links section or anywhere in the text (LinkedIn, GitHub…).
+  const profileUrls = [...sections.filter(s => s.key === 'links').flatMap(s => s.lines).join(' ').matchAll(/(?:https?:\/\/)?(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+\/[^\s,;)]*/gi), ...fullText.matchAll(/(?:https?:\/\/)?(?:[a-z]{2}\.)?(?:www\.)?(?:linkedin\.com\/in|github\.com|gitlab\.com|behance\.net|dribbble\.com)\/[^\s,;)]+/gi)].map(match => cleanUrl(match[0].replace(/[.]+$/, '')));
+  for (const url of profileUrls) {
+    if (links.some(link => urlLabel(link.url) === urlLabel(url)) || urlLabel(url) === urlLabel(website || '')) continue;
+    links.push({ id: uid(), label: profileName(url), url });
+  }
+
+  const interests: Interest[] = sections.filter(s => s.key === 'interests').flatMap(s => s.lines)
+    .flatMap(line => line.replace(/^[•\-*–]\s*/, '').split(/\s*[,;•|·]\s*/))
+    .map(name => name.trim()).filter(name => name && name.length <= 80).slice(0, 20)
+    .map(name => ({ id: uid(), name, description: '' }));
 
   // 11. Extract Consent (RODO / GDPR)
   let consent = '';
@@ -660,6 +672,7 @@ export function parseCvText(fullText: string): ParsedCvResult {
     certificates,
     languages,
     links,
+    interests,
     consent,
   };
 

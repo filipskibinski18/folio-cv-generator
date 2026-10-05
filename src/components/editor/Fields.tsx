@@ -2,9 +2,22 @@ import { tr } from '../../lib/i18n';
 import type { ReactNode } from 'react';
 import { useId } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
+import { cleanUrl } from '../../lib/format';
 
 export function Field({ label, value, onChange, multiline = false, placeholder, hint, type = 'text' }: { label: string; value: string; onChange: (value: string) => void; multiline?: boolean; placeholder?: string; hint?: string; type?: string }) {
   return <label className="field"><span>{tr(label)}</span>{multiline ? <textarea value={value} onChange={event => onChange(event.target.value)} placeholder={tr(placeholder)} rows={4} maxLength={20000} /> : <input type={type} value={value} onChange={event => onChange(event.target.value)} placeholder={tr(placeholder)} maxLength={300} />}{hint && <small>{tr(hint)}</small>}</label>;
+}
+/** URL input that tidies pasted links (whitespace, tracking parameters) instead of storing them verbatim. */
+export function UrlField({ label, value, onChange, placeholder = 'np. linkedin.com/in/twoj-profil' }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string }) {
+  return <label className="field"><span>{tr(label)}</span><input type="text" inputMode="url" autoComplete="url" spellCheck={false} value={value} placeholder={tr(placeholder)} maxLength={300}
+    onChange={event => onChange(event.target.value)}
+    onPaste={event => {
+      const input = event.currentTarget;
+      if (input.selectionStart !== 0 || input.selectionEnd !== input.value.length) return;
+      event.preventDefault();
+      onChange(cleanUrl(event.clipboardData.getData('text')).slice(0, 300));
+    }}
+    onBlur={() => { const cleaned = cleanUrl(value); if (cleaned !== value) onChange(cleaned); }} /></label>;
 }
 export function SelectField({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: { value: string; label: string }[] }) {
   return <label className="field"><span>{tr(label)}</span><select value={value} onChange={event => onChange(event.target.value)}>{options.map(option => <option key={option.value} value={option.value}>{tr(option.label)}</option>)}</select></label>;

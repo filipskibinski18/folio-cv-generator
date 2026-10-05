@@ -44,6 +44,12 @@ export function MiniResume({ template }: { template: ResumeTemplate }) {
     </div>
   </div>;
 }
+/** Built-in templates show a real first page rendered by `npm run thumbnails`; the sketch is only a fallback. */
+function TemplateThumbnail({ template }: { template: ResumeTemplate }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <MiniResume template={template} />;
+  return <div className="template-thumbnail" aria-hidden="true"><img src={`${import.meta.env.BASE_URL}thumbnails/${template.id}.webp`} alt="" loading="lazy" decoding="async" width={360} height={509} onError={() => setFailed(true)} /></div>;
+}
 export function TemplateManager({ notify }: { notify: (message: string) => void }) {
   const store = useResumeStore(); const [mode, setMode] = useState<'new' | 'update' | null>(null); const [name, setName] = useState('');
   const [filter, setFilter] = useState('all');
@@ -60,7 +66,7 @@ export function TemplateManager({ notify }: { notify: (message: string) => void 
   const apply = (template: ResumeTemplate) => { store.applyTemplate(template); notify(`${tr("Załadowano szablon")} ${template.name}`); };
   const card = (template: ResumeTemplate) => <div className={`template-card ${store.activeTemplateId === template.id ? 'active' : ''}`} key={template.id}>
     <button className="template-apply" onClick={() => apply(template)} aria-label={`${tr("Wybierz szablon")} ${template.name}`} aria-pressed={store.activeTemplateId === template.id}>
-      <MiniResume template={template} />{store.activeTemplateId === template.id && <span className="template-check"><Check size={12} /></span>}
+      {template.builtIn ? <TemplateThumbnail template={template} /> : <MiniResume template={template} />}{store.activeTemplateId === template.id && <span className="template-check"><Check size={12} /></span>}
       <div className="template-description"><strong>{template.name}</strong><span>{tr(template.description)}</span></div>
     </button>
     <div className="template-actions"><button className="text-button" onClick={() => { store.cloneTemplate(template); notify(tr("Utworzono kopię szablonu")); }}><Copy size={12} />{tr("Klonuj")}</button>

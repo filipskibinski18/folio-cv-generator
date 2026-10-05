@@ -2,8 +2,8 @@ import { tr } from '../../lib/i18n';
 import { Plus, CornerDownRight, X } from 'lucide-react';
 import type { Bullet, ResumeData, SectionId } from '../../types/resume';
 import { useResumeStore } from '../../store/useResumeStore';
-import { uid } from '../../lib/format';
-import { AddButton, Field, ItemCard, SelectField } from './Fields';
+import { profileName, uid } from '../../lib/format';
+import { AddButton, Field, ItemCard, SelectField, UrlField } from './Fields';
 import { PhotoEditor } from './PhotoEditor';
 
 export function PersonalEditor({ showPhoto = true }: { showPhoto?: boolean }) {
@@ -12,7 +12,7 @@ export function PersonalEditor({ showPhoto = true }: { showPhoto?: boolean }) {
     <Field label={tr("Stanowisko / tytuł zawodowy")} value={personal.title} onChange={title => update({ title })} placeholder={tr("np. Senior Product Designer")} />
     <Field label={tr("Adres e-mail")} type="email" value={personal.email} onChange={email => update({ email })} />
     <div className="field-grid"><Field label={tr("Telefon")} type="tel" value={personal.phone} onChange={phone => update({ phone })} /><Field label={tr("Lokalizacja")} value={personal.location} onChange={location => update({ location })} /></div>
-    <Field label={tr("Strona internetowa")} value={personal.website} onChange={website => update({ website })} placeholder={tr("twojeportfolio.pl")} />
+    <UrlField label={tr("Strona internetowa")} value={personal.website} onChange={website => update({ website })} placeholder="twojeportfolio.pl" />
   </div>;
 }
 function BulletsEditor({ bullets, onChange, depth = 0 }: { bullets: Bullet[]; onChange: (items: Bullet[]) => void; depth?: number }) {
@@ -64,14 +64,14 @@ export function SectionEditor({ section, itemId }: { section: SectionId; itemId?
     case 'projects': return <div className="form-content">{data.projects.filter(item => !itemId || item.id === itemId).map((item, index) => {
       const update = (patch: Partial<typeof item>) => set('projects', data.projects.map(entry => entry.id === item.id ? { ...entry, ...patch } : entry));
       return <ItemCard key={item.id} title={item.name || `Projekt ${index + 1}`} onDelete={() => set('projects', data.projects.filter(entry => entry.id !== item.id))}>
-        <Field label={tr("Nazwa projektu")} value={item.name} onChange={name => update({ name })} /><Field label={tr("Rola / data")} value={item.role} onChange={role => update({ role })} /><Field label={tr("Adres projektu")} value={item.url} onChange={url => update({ url })} /><Field label={tr("Opis")} multiline value={item.description} onChange={description => update({ description })} />
+        <Field label={tr("Nazwa projektu")} value={item.name} onChange={name => update({ name })} /><Field label={tr("Rola / data")} value={item.role} onChange={role => update({ role })} /><UrlField label={tr("Adres projektu")} value={item.url} onChange={url => update({ url })} placeholder="np. github.com/uzytkownik/projekt" /><Field label={tr("Opis")} multiline value={item.description} onChange={description => update({ description })} />
         <Field label={tr("Technologie / tagi")} value={item.technologies.join(', ')} onChange={value => update({ technologies: value.split(',').map(v => v.trim()) })} hint={tr("Oddziel tagi przecinkami.")} /><BulletsEditor bullets={item.bullets} onChange={bullets => update({ bullets })} />
       </ItemCard>;
     })}{!itemId && <AddButton onClick={() => set('projects', [...data.projects, { id: uid(), name: '', role: '', url: '', description: '', technologies: [], bullets: [] }])}>{tr("Dodaj projekt")}</AddButton>}</div>;
     case 'certificates': return <div className="form-content">{data.certificates.filter(item => !itemId || item.id === itemId).map((item, index) => {
       const update = (patch: Partial<typeof item>) => set('certificates', data.certificates.map(entry => entry.id === item.id ? { ...entry, ...patch } : entry));
       return <ItemCard key={item.id} title={item.name || `Certyfikat ${index + 1}`} onDelete={() => set('certificates', data.certificates.filter(entry => entry.id !== item.id))}>
-        <Field label={tr("Nazwa certyfikatu")} value={item.name} onChange={name => update({ name })} /><Field label={tr("Organizacja")} value={item.issuer} onChange={issuer => update({ issuer })} /><Field label={tr("Data")} value={item.date} onChange={date => update({ date })} /><Field label={tr("Link do certyfikatu")} value={item.url} onChange={url => update({ url })} />
+        <Field label={tr("Nazwa certyfikatu")} value={item.name} onChange={name => update({ name })} /><Field label={tr("Organizacja")} value={item.issuer} onChange={issuer => update({ issuer })} /><Field label={tr("Data")} value={item.date} onChange={date => update({ date })} /><UrlField label={tr("Link do certyfikatu")} value={item.url} onChange={url => update({ url })} placeholder="np. credly.com/badges/…" />
       </ItemCard>;
     })}{!itemId && <AddButton onClick={() => set('certificates', [...data.certificates, { id: uid(), name: '', issuer: '', date: '', url: '' }])}>{tr("Dodaj certyfikat")}</AddButton>}</div>;
     case 'languages': return <div className="form-content">{data.languages.filter(item => !itemId || item.id === itemId).map((item, index) => {
@@ -81,9 +81,13 @@ export function SectionEditor({ section, itemId }: { section: SectionId; itemId?
         <SelectField label={tr("Wybierz poziom CEFR")} value="" onChange={level => { if (level) update({ level }); }} options={[{ value: '', label: 'Własny opis lub wybierz…' }, ...['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Ojczysty'].map(value => ({ value, label: value }))]} />
       </ItemCard>;
     })}{!itemId && <AddButton onClick={() => set('languages', [...data.languages, { id: uid(), name: '', level: '' }])}>{tr("Dodaj język")}</AddButton>}</div>;
+    case 'interests': return <div className="form-content">{data.interests.filter(item => !itemId || item.id === itemId).map((item, index) => {
+      const update = (patch: Partial<typeof item>) => set('interests', data.interests.map(entry => entry.id === item.id ? { ...entry, ...patch } : entry));
+      return <ItemCard key={item.id} title={item.name || `${tr('Zainteresowanie')} ${index + 1}`} onDelete={() => set('interests', data.interests.filter(entry => entry.id !== item.id))}><Field label={tr("Zainteresowanie")} value={item.name} onChange={name => update({ name })} placeholder={tr("np. Wspinaczka")} /><Field label={tr("Krótki opis (opcjonalnie)")} value={item.description} onChange={description => update({ description })} placeholder={tr("np. 3 lata w sekcji, prowadzę zajęcia dla początkujących")} hint={tr("Bez opisu zainteresowania pokażą się jako zwarta lista.")} /></ItemCard>;
+    })}{!itemId && <AddButton onClick={() => set('interests', [...data.interests, { id: uid(), name: '', description: '' }])}>{tr("Dodaj zainteresowanie")}</AddButton>}</div>;
     case 'links': return <div className="form-content">{data.links.filter(item => !itemId || item.id === itemId).map((item, index) => {
       const update = (patch: Partial<typeof item>) => set('links', data.links.map(entry => entry.id === item.id ? { ...entry, ...patch } : entry));
-      return <ItemCard key={item.id} title={item.label || `Profil ${index + 1}`} onDelete={() => set('links', data.links.filter(entry => entry.id !== item.id))}><Field label={tr("Nazwa profilu")} value={item.label} onChange={label => update({ label })} /><Field label={tr("Adres URL")} value={item.url} onChange={url => update({ url })} /></ItemCard>;
+      return <ItemCard key={item.id} title={item.label || `Profil ${index + 1}`} onDelete={() => set('links', data.links.filter(entry => entry.id !== item.id))}><Field label={tr("Nazwa profilu")} value={item.label} onChange={label => update({ label })} /><UrlField label={tr("Adres URL")} value={item.url} onChange={url => update({ url, ...(!item.label.trim() && profileName(url) ? { label: profileName(url) } : {}) })} /></ItemCard>;
     })}{!itemId && <AddButton onClick={() => set('links', [...data.links, { id: uid(), label: '', url: '' }])}>{tr("Dodaj link")}</AddButton>}</div>;
   }
 }

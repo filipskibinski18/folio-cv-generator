@@ -5,6 +5,7 @@ vi.stubGlobal('localStorage', { getItem: (key: string) => memory.get(key) ?? nul
 const { useResumeStore } = await import('../store/useResumeStore');
 const { presets } = await import('../data/presets');
 const { getStorageError } = await import('../lib/storage');
+const { resumeDataSchema, resumeThemeSchema, sectionIds } = await import('../types/resume');
 
 beforeEach(() => { useResumeStore.getState().restoreExample(); useResumeStore.setState({ templates: [], history: [], future: [] }); });
 describe('Historia i zapis lokalny', () => {
@@ -43,7 +44,18 @@ describe('Historia i zapis lokalny', () => {
   it('przesuwa sekcje bez duplikatów', () => {
     useResumeStore.getState().reorderSections('summary', 'skills');
     const ids = useResumeStore.getState().theme.sections.map(s => s.id);
-    expect(ids.indexOf('summary')).toBe(3); expect(new Set(ids).size).toBe(9);
+    expect(ids.indexOf('summary')).toBe(3); expect(new Set(ids).size).toBe(sectionIds.length);
+  });
+  it('wczytuje motyw i dane zapisane przed dodaniem sekcji zainteresowań', () => {
+    const { theme, data } = useResumeStore.getState();
+    const legacyTheme = { ...structuredClone(theme), language: 'en', sections: theme.sections.filter(s => s.id !== 'interests') };
+    delete (legacyTheme.design as Partial<typeof legacyTheme.design>).sidebarStyle;
+    const migrated = resumeThemeSchema.parse(legacyTheme);
+    expect(migrated.sections.map(s => s.id)).toEqual(sectionIds);
+    expect(migrated.sections.find(s => s.id === 'interests')?.title).toBe('Interests');
+    expect(migrated.sections.at(-1)?.id).toBe('consent'); expect(migrated.design.sidebarStyle).toBe('box');
+    const legacyData: Partial<typeof data> = structuredClone(data); delete legacyData.interests;
+    expect(resumeDataSchema.parse(legacyData).interests).toEqual([]);
   });
   it('zachowuje edycję w pamięci przy braku miejsca w localStorage', () => {
     const mock = vi.spyOn(localStorage, 'setItem').mockImplementation(() => { throw new DOMException('Quota exceeded', 'QuotaExceededError'); });

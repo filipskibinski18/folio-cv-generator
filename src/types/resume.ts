@@ -5,11 +5,11 @@ const short = z.string().max(300);
 const id = z.string().min(1).max(100);
 // Only self-contained raster images are persisted or imported; no remote URLs/SVG.
 export const photoDataSchema = z.string().max(800000).refine(value => value === '' || /^data:image\/(?:jpeg;base64,\/9j\/[A-Za-z0-9+/]*|png;base64,iVBORw0KGgo[A-Za-z0-9+/]*)={0,2}$/.test(value), 'Zdjęcie musi być lokalnym obrazem JPEG lub PNG.').default('');
-export const sectionIds = ['summary', 'experience', 'education', 'skills', 'projects', 'certificates', 'languages', 'links', 'consent'] as const;
+export const sectionIds = ['summary', 'experience', 'education', 'skills', 'projects', 'certificates', 'languages', 'links', 'interests', 'consent'] as const;
 export type SectionId = (typeof sectionIds)[number];
 export const sectionLabels: Record<SectionId, string> = {
   summary: 'O mnie', experience: 'Doświadczenie', education: 'Edukacja', skills: 'Umiejętności',
-  projects: 'Projekty', certificates: 'Certyfikaty', languages: 'Języki', links: 'Linki i profile', consent: 'Klauzula RODO',
+  projects: 'Projekty', certificates: 'Certyfikaty', languages: 'Języki', links: 'Linki i profile', interests: 'Zainteresowania', consent: 'Klauzula RODO',
 };
 export interface Bullet { id: string; text: string; children: Bullet[] }
 const bulletSchema = (depth: number): z.ZodType<Bullet> => z.object({
@@ -24,13 +24,14 @@ export const projectSchema = z.object({ id, name: short, role: short, url: short
 export const certificateSchema = z.object({ id, name: short, issuer: short, date: short, url: short });
 export const languageSchema = z.object({ id, name: short, level: short });
 export const linkSchema = z.object({ id, label: short, url: short });
+export const interestSchema = z.object({ id, name: short, description: short.default('') });
 export const resumeDataSchema = z.object({
   personal: z.object({ firstName: short, lastName: short, title: short, email: short, phone: short, location: short, website: short, photo: photoDataSchema }),
   summary: text,
   experience: z.array(experienceSchema).max(200), education: z.array(educationSchema).max(200),
   skills: z.array(skillCategorySchema).max(100), projects: z.array(projectSchema).max(200),
   certificates: z.array(certificateSchema).max(200), languages: z.array(languageSchema).max(100),
-  links: z.array(linkSchema).max(100), consent: text,
+  links: z.array(linkSchema).max(100), interests: z.array(interestSchema).max(100).default([]), consent: text,
 }).superRefine((data, context) => {
   const seen = new Set<string>();
   const check = (item: { id: string }, path: (string | number)[]) => {
@@ -38,7 +39,7 @@ export const resumeDataSchema = z.object({
     seen.add(item.id);
   };
   const bullets = (items: Bullet[], path: (string | number)[]) => items.forEach((item, index) => { check(item, [...path, index, 'id']); bullets(item.children, [...path, index, 'children']); });
-  for (const key of ['experience', 'education', 'skills', 'projects', 'certificates', 'languages', 'links'] as const) {
+  for (const key of ['experience', 'education', 'skills', 'projects', 'certificates', 'languages', 'links', 'interests'] as const) {
     data[key].forEach((item, index) => {
       check(item, [key, index, 'id']);
       if ('bullets' in item) bullets(item.bullets, [key, index, 'bullets']);
@@ -54,28 +55,47 @@ export type Project = z.infer<typeof projectSchema>;
 export type Certificate = z.infer<typeof certificateSchema>;
 export type Language = z.infer<typeof languageSchema>;
 export type ResumeLink = z.infer<typeof linkSchema>;
+export type Interest = z.infer<typeof interestSchema>;
 
 export const fontNames = ['Inter', 'Lora', 'Roboto', 'Montserrat', 'PlayfairDisplay', 'SourceSans3', 'Oswald', 'CormorantGaramond', 'Caveat'] as const;
 export type FontName = (typeof fontNames)[number];
 export const layoutNames = ['single', 'sidebar-left', 'sidebar-right', 'grid'] as const;
 export type LayoutName = (typeof layoutNames)[number];
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Wymagany kolor HEX, np. #25564a.');
-export const resumeThemeSchema = z.object({
+// Themes saved before a section existed get it appended (before the consent
+// footer) instead of failing validation and silently resetting the design.
+const withMissingSections = (value: unknown) => {
+  if (!value || typeof value !== 'object' || !Array.isArray((value as { sections?: unknown }).sections)) return value;
+  const theme = value as { sections: unknown[]; language?: unknown };
+  const idOf = (section: unknown) => (section as { id?: unknown } | null)?.id;
+  const missing = sectionIds.filter(id => !theme.sections.some(section => idOf(section) === id));
+  if (!missing.length) return value;
+  const sections = [...theme.sections];
+  for (const id of missing) {
+    const consent = sections.findIndex(section => idOf(section) === 'consent');
+    const title = theme.language === 'en' && id === 'interests' ? 'Interests' : sectionLabels[id];
+    sections.splice(consent < 0 ? sections.length : consent, 0, { id, title, icon: 'auto', isVisible: true, column: 'sidebar' });
+  }
+  return { ...theme, sections };
+};
+export const resumeThemeSchema = z.preprocess(withMissingSections, z.object({
   language: z.enum(['pl', 'en']).default('pl'),
   keepSectionsTogether: z.boolean().default(true),
   design: z.object({
     entryStyle: z.enum(['plain', 'timeline', 'table', 'cards']),
-    decoration: z.enum(['none', 'rule', 'corner', 'frame', 'orbit', 'dots', 'arch', 'ribbon', 'contour', 'mosaic']),
-    nameStyle: z.enum(['natural', 'uppercase', 'stacked']),
+    decoration: z.enum(['none', 'rule', 'corner', 'frame', 'orbit', 'dots', 'arch', 'ribbon', 'contour', 'mosaic', 'blob', 'diagonal']),
+    nameStyle: z.enum(['natural', 'uppercase', 'stacked', 'split']),
     contactPlacement: z.enum(['header', 'sidebar']),
     contactIcons: z.boolean(),
     skillMeter: z.enum(['numbers', 'dots', 'bars']),
     sidebarPadding: z.number().min(8).max(24),
     continuationGap: z.number().min(18).max(40),
-  }).default({ entryStyle: 'plain', decoration: 'none', nameStyle: 'natural', contactPlacement: 'header', contactIcons: false, skillMeter: 'numbers', sidebarPadding: 12, continuationGap: 24 }),
+    // box: rounded panel; bleed: colour runs to the page edge on every page; line: hairline divider only.
+    sidebarStyle: z.enum(['box', 'bleed', 'line']).default('box'),
+  }).default({ entryStyle: 'plain', decoration: 'none', nameStyle: 'natural', contactPlacement: 'header', contactIcons: false, skillMeter: 'numbers', sidebarPadding: 12, continuationGap: 24, sidebarStyle: 'box' }),
   icons: z.object({ style: z.enum(['none', 'outline', 'circle', 'square']), size: z.number().min(10).max(22) }).default({ style: 'none', size: 14 }),
-  headerStyle: z.enum(['accent', 'banner', 'centered']).default('accent'),
-  sectionStyle: z.enum(['underline', 'filled', 'plain', 'rail', 'capsule']).default('underline'),
+  headerStyle: z.enum(['accent', 'banner', 'centered', 'hero']).default('accent'),
+  sectionStyle: z.enum(['underline', 'filled', 'plain', 'rail', 'capsule', 'bar', 'numbered', 'side']).default('underline'),
   photo: z.object({
     isVisible: z.boolean(),
     shape: z.enum(['circle', 'rounded', 'portrait-rounded', 'portrait', 'square']).default('circle'),
@@ -89,10 +109,10 @@ export const resumeThemeSchema = z.object({
   geometry: z.object({ margins: z.object({ top: z.number().min(8).max(30), right: z.number().min(8).max(30), bottom: z.number().min(8).max(30), left: z.number().min(8).max(30) }), sectionPadding: z.number().min(0).max(12), sectionGap: z.number().min(6).max(28), blockGap: z.number().min(3).max(18), radius: z.number().min(0).max(12), lineWidth: z.number().min(0).max(3), columnGap: z.number().min(8).max(30) }),
   layout: z.enum(layoutNames), sidebarWidth: z.number().min(25).max(45),
   skillStyle: z.enum(['text', 'tags', 'levels']),
-  sections: z.array(z.object({ id: z.enum(sectionIds), title: short, icon: z.enum(['auto', 'none', 'user', 'briefcase', 'book', 'code', 'award', 'globe', 'link', 'shield']).default('auto'), isVisible: z.boolean(), column: z.enum(['main', 'sidebar']) })).length(sectionIds.length).refine(items => new Set(items.map(item => item.id)).size === sectionIds.length, 'Sekcje muszą mieć unikalne identyfikatory.'),
-});
+  sections: z.array(z.object({ id: z.enum(sectionIds), title: short, icon: z.enum(['auto', 'none', 'user', 'briefcase', 'book', 'code', 'award', 'globe', 'link', 'shield', 'heart']).default('auto'), isVisible: z.boolean(), column: z.enum(['main', 'sidebar']) })).length(sectionIds.length).refine(items => new Set(items.map(item => item.id)).size === sectionIds.length, 'Sekcje muszą mieć unikalne identyfikatory.'),
+}));
 export type ResumeTheme = z.infer<typeof resumeThemeSchema>;
-export const templateCategoryIds = ['minimal', 'classic', 'business', 'creative', 'editorial', 'technical', 'artistic', 'personal'] as const;
+export const templateCategoryIds = ['signature', 'minimal', 'classic', 'business', 'creative', 'editorial', 'technical', 'artistic', 'personal'] as const;
 export type TemplateCategory = typeof templateCategoryIds[number];
 export interface ResumeTemplate { id: string; name: string; description: string; theme: ResumeTheme; categories?: TemplateCategory[]; createdAt: string; updatedAt: string; builtIn: boolean }
 export const templateSchema = z.object({ id, name: z.string().min(1).max(80), description: short, theme: resumeThemeSchema, categories: z.array(z.enum(templateCategoryIds)).max(8).optional(), createdAt: z.string(), updatedAt: z.string(), builtIn: z.boolean() });

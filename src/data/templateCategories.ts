@@ -1,6 +1,7 @@
 import type { ResumeTemplate, TemplateCategory } from '../types/resume';
 
 export const templateCategories: { id: TemplateCategory; label: string; description: string }[] = [
+  { id: 'signature', label: 'Wyróżnione', description: 'Nowa kolekcja: kolumny od krawędzi do krawędzi, nagłówki hero i redakcyjne siatki.' },
   { id: 'minimal', label: 'Minimalistyczne', description: 'Prosta forma i dużo światła.' },
   { id: 'classic', label: 'Klasyczne', description: 'Ponadczasowe kroje i spokojne kompozycje.' },
   { id: 'business', label: 'Biznesowe', description: 'Wyrazisty profil i uporządkowane doświadczenie.' },

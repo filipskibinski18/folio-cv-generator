@@ -4,7 +4,7 @@ import type { CSSProperties } from 'react';
 import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Award, BookOpen, BriefcaseBusiness, ChevronDown, Eye, EyeOff, FileText, FileUp, Globe2, GripVertical, Languages, Layers3, Link2, ShieldCheck, UserRound } from 'lucide-react';
+import { Award, BookOpen, BriefcaseBusiness, ChevronDown, Eye, EyeOff, FileText, FileUp, Globe2, GripVertical, Languages, Layers3, Link2, ShieldCheck, UserRound, Heart } from 'lucide-react';
 import type { ResumeTheme, SectionId } from '../../types/resume';
 import { useResumeStore } from '../../store/useResumeStore';
 import { PersonalEditor, SectionEditor } from './DataEditor';
@@ -26,7 +26,7 @@ export function ContentEditor() {
   </div>;
 }
 
-const icons = { summary: FileText, experience: BriefcaseBusiness, education: BookOpen, skills: Award, projects: Layers3, certificates: ShieldCheck, languages: Languages, links: Link2, consent: Globe2 };
+const icons = { summary: FileText, experience: BriefcaseBusiness, education: BookOpen, skills: Award, projects: Layers3, certificates: ShieldCheck, languages: Languages, links: Link2, interests: Heart, consent: Globe2 };
 function SortableSection({ section, open, onToggle, layoutOnly }: { section: ResumeTheme['sections'][number]; open: boolean; onToggle: () => void; layoutOnly: boolean }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
   const data = useResumeStore(state => state.data); const theme = useResumeStore(state => state.theme); const updateTheme = useResumeStore(state => state.updateTheme);

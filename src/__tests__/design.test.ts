@@ -13,7 +13,12 @@ describe('Style catalogue and editable export', () => {
     for (const category of templateCategories) expect(presets.filter(preset => categoriesFor(preset).includes(category.id)).length).toBeGreaterThanOrEqual(4);
     expect(new Set(presets.map(preset => JSON.stringify(preset.theme))).size).toBe(presets.length);
     expect(new Set(presets.map(preset => preset.theme.design.entryStyle)).size).toBe(4);
-    expect(new Set(presets.map(preset => preset.theme.design.decoration)).size).toBe(10);
+    expect(new Set(presets.map(preset => preset.theme.design.decoration)).size).toBe(12);
+    // Every new composition option is used by at least one built-in template.
+    expect(new Set(presets.map(preset => preset.theme.design.sidebarStyle))).toEqual(new Set(['box', 'bleed', 'line']));
+    for (const style of ['bar', 'numbered', 'side'] as const) expect(presets.some(preset => preset.theme.sectionStyle === style), style).toBe(true);
+    expect(presets.some(preset => preset.theme.headerStyle === 'hero')).toBe(true);
+    expect(presets.some(preset => preset.theme.design.nameStyle === 'split')).toBe(true);
   });
   it('loads older themes and rejects unsafe geometry', () => {
     const { design: _design, keepSectionsTogether: _keep, ...old } = defaultTheme;
@@ -54,5 +59,14 @@ describe('Style catalogue and editable export', () => {
     const xml = await zip.file('word/document.xml')!.async('string');
     expect(xml).not.toContain('<w:tbl>'); expect(xml).not.toContain('F0FAF8');
     expect(xml).toContain('w:color="ffffff"'); expect(xml).toContain('w:val="182322"');
+  });
+});
+
+describe('Miniatury szablonów', () => {
+  it('każdy wbudowany szablon ma wyrenderowaną miniaturę (npm run thumbnails)', async () => {
+    const { existsSync } = await import('node:fs');
+    const { presets } = await import('../data/presets');
+    const missing = presets.filter(preset => !existsSync(`public/thumbnails/${preset.id}.webp`)).map(preset => preset.id);
+    expect(missing).toEqual([]);
   });
 });

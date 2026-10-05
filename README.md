@@ -8,7 +8,7 @@ Aplikacja działa w **100% lokalnie w przeglądarce**: dane, zdjęcia i szablony
 
 ## Główne możliwości
 
-- 🌙 **Tryb jasny i ciemny**: przełącznik w nagłówku, zapamiętywanie wyboru i domyślne dopasowanie do ustawień systemu. Motyw interfejsu jest niezależny od kolorów CV i eksportowanych dokumentów.
+- 🌙 **Tryb jasny i ciemny** w stylistyce „Nordycki spokój” (Fiord / Mgła nocą): przełącznik w nagłówku, zapamiętywanie wyboru i domyślne dopasowanie do ustawień systemu. Motyw interfejsu jest niezależny od kolorów CV i eksportowanych dokumentów.
 - 🎯 **Optymalizator ATS**:
   - Interaktywny moduł analizy CV pod kątem systemów Applicant Tracking System (ATS).
   - Wklejanie treści oferty pracy i obliczanie procentowego wskaźnika dopasowania (ATS Score: 0–100%).
@@ -19,18 +19,21 @@ Aplikacja działa w **100% lokalnie w przeglądarce**: dane, zdjęcia i szablony
 - 🖱️ **Bezpośrednia edycja z podglądu (Click-to-edit)**:
   - Kliknij dowolny element w oknie podglądu (imię, dane kontaktowe, zdjęcie, nagłówek sekcji czy konkretne stanowisko w historii pracy), aby natychmiast otworzyć jego dedykowany formularz w lewym panelu edytora.
   - Wyraźne podświetlenie edytowanego elementu i szybki powrót („Wróć do listy” / klawisz Escape).
-- 🎨 **100 profesjonalnych szablonów i Style w 1 kliknięcie**:
-  - Gotowe szablony podzielone na 7 kategorii: **Minimalistyczne**, **Klasyczne**, **Biznesowe**, **Kreatywne**, **Eleganckie**, **Techniczne** i **Artystyczne**, a także kategoria **Moje** na własne kompozycje.
+- 🎨 **115 profesjonalnych szablonów i Style w 1 kliknięcie**:
+  - Kolekcja **Wyróżnione** (15 szablonów) z nowymi możliwościami renderera: kolumna boczna od krawędzi do krawędzi strony lub oddzielona tylko linią, nagłówek „hero” na całą szerokość, tytuły sekcji numerowane (01, 02…) lub umieszczone na marginesie, dwukolorowe imię i nazwisko, oś czasu z węzłami oraz nowe dekoracje.
+  - Galeria pokazuje prawdziwe miniatury pierwszej strony (`npm run thumbnails` po zmianie szablonów lub renderera).
+  - Pozostałe szablony podzielone na 7 kategorii: **Minimalistyczne**, **Klasyczne**, **Biznesowe**, **Kreatywne**, **Eleganckie**, **Techniczne** i **Artystyczne**, a także kategoria **Moje** na własne kompozycje.
   - Filtry szablonów według układu kolumn, obecności zdjęcia czy stylu oraz zintegrowana wyszukiwarka.
   - „Styl w 1 kliknięcie” (Design Presets): 12 kompletnych palet zmieniających jednocześnie tło strony i kolumny, tekst, akcenty, separatory oraz ramkę zdjęcia. Każdy ze 100 szablonów ma domyślnie włączone zdjęcie.
   - Możliwość zapisu, duplikowania, edycji oraz eksportu/importu własnych kompozycji szablonów.
 - 📥 **Lokalny import PDF i DOCX**:
   - Zaawansowany parser działający po stronie klienta (PDF.js + JSZip) obsługujący pliki do 15 MB.
-  - Rozpoznawanie sekcji, danych kontaktowych, dat, wielopoziomowych punktów, technologii i linków.
+  - Rozpoznawanie sekcji, danych kontaktowych, dat, wielopoziomowych punktów, technologii, linków (w tym profili LinkedIn/GitHub) i zainteresowań.
   - Okno podglądu rozpoznanych danych przed ich zastosowaniem, opcja zachowania obecnego zdjęcia oraz pełna możliwość cofnięcia operacji (Undo).
 - 🖼️ **Zaawansowany edytor zdjęcia**:
   - Obsługa formatów JPG, PNG i WebP (do 10 MB / 40 MP).
-  - Intuicyjne powiększanie (zoom) i precyzyjne przesuwanie kadru w obu osiach.
+  - Kadrowanie przez przeciąganie zdjęcia myszką lub palcem (oraz strzałkami), powiększanie kółkiem myszy lub suwakiem i oddalanie, by zmieścić całą sylwetkę.
+  - Kadr ma proporcje ramki z CV (koło/kwadrat 1:1, portret 3:4), a zapisane zdjęcie można w każdej chwili wykadrować ponownie przyciskiem „Kadruj”.
   - Kształty ramki: koło, zaokrąglony prostokąt, kwadrat, portret, a także regulacja obramowania i rozmiaru w mm.
   - Automatyczne skalowanie po stronie klienta do 512 × 512 px w celu optymalizacji pamięci.
 - 🌐 **Wielojęzyczność (i18n)**:
@@ -42,6 +45,8 @@ Aplikacja działa w **100% lokalnie w przeglądarce**: dane, zdjęcia i szablony
 - 📄 **Podwójny silnik eksportu**:
   - **PDF (A4)**: wektorowy, generowany w Web Workerze bez blokowania interfejsu. Rzeczywisty podział stron. Domyślnie włączone „Przenoś całe sekcje” przenosi sekcje mieszczące się na jednej stronie w całości, także w kolumnach; dłuższe sekcje dzielą się bez utraty treści. Ustawienie zachowuje się przy zmianie szablonu. Nagłówki pozostają z początkiem treści, a tekst można zaznaczać na każdej stronie.
   - **DOCX (Word)**: natywne style, tabele kolumn, hiperłącza, listy wypunktowane i osadzone czcionki TTF, z opcją formatu jednokolumnowego ATS. Przenoszenie sekcji korzysta z natywnego łączenia akapitów w Wordzie.
+- 🔗 **Linki**: wklejony adres jest czyszczony z białych znaków i parametrów śledzących (`utm_…`, `trk`…), profile typu LinkedIn/GitHub dostają nazwę automatycznie, a w PDF zbyt długie adresy są skracane do szerokości kolumny (pełny adres pozostaje klikalny).
+- ❤️ **Sekcja Zainteresowania / Hobby**: zwarta lista lub wpisy z krótkim opisem; starsze projekty dostają ją automatycznie.
 - 💾 **Kopia zapasowa i historia**:
   - Eksport i import całych projektów do formatu JSON z rygorystyczną walidacją Zod.
   - Pełna historia operacji Undo/Redo (do 40 stanów) dostępna z przycisków w nagłówku oraz skrótów klawiszowych (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z).
@@ -72,6 +77,7 @@ Aplikacja będzie dostępna pod adresem: **http://127.0.0.1:5173**.
 | :--- | :--- |
 | `npm run dev` | Uruchomienie lokalnego serwera deweloperskiego Vite |
 | `npm test` | Uruchomienie zestawu testów Vitest (PDF, DOCX, ATS, parser, i18n, design) |
+| `npm run thumbnails` | Renderuje miniatury wszystkich szablonów do `public/thumbnails/` (test pilnuje, by żadnej nie brakowało) |
 | `npm run build` | Ścisła kontrola TypeScript (`tsc -b`), budowa aplikacji klienta i serwera produkcyjnego |
 | `npm run preview` | Podgląd zbudowanej aplikacji klienckiej przez Vite |
 | `npm start` | Uruchomienie zoptymalizowanego, lokalnego serwera produkcyjnego (`node dist-server/index.mjs`) |

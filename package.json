@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build && node scripts/build-server.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
+    "thumbnails": "node scripts/render-thumbnails.mjs",
     "start": "node dist-server/index.mjs"
   },
   "dependencies": {

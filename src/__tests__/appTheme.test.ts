@@ -54,9 +54,9 @@ describe('Interface theme preference', () => {
     vi.stubGlobal('document', { documentElement: root, querySelector: () => ({ setAttribute }) });
     applyAppTheme('dark');
     expect(root.dataset.theme).toBe('dark');
-    expect(setAttribute).toHaveBeenLastCalledWith('content', '#231e25');
+    expect(setAttribute).toHaveBeenLastCalledWith('content', '#161b21');
     applyAppTheme('light');
     expect(root.dataset.theme).toBe('light');
-    expect(setAttribute).toHaveBeenLastCalledWith('content', '#573d53');
+    expect(setAttribute).toHaveBeenLastCalledWith('content', '#e3e9ee');
   });
 });

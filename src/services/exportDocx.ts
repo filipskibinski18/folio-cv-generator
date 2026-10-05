@@ -2,7 +2,7 @@ import { AlignmentType, BorderStyle, Document, ExternalHyperlink, HeadingLevel, 
 import { Buffer } from 'buffer';
 import type { Bullet, ResumeData, ResumeTheme, SectionId } from '../types/resume';
 import { dateRange, documentFilename, downloadBlob, fullName, inlineRuns, mmToTwip, safeUrl, urlLabel } from '../lib/format';
-import { contrastColor, photoForDocx } from '../lib/photo';
+import { contrastColor, photoAspect, photoForDocx } from '../lib/photo';
 import { sectionIconSvg } from '../lib/sectionIcons';
 
 type EmbeddedFonts = NonNullable<ConstructorParameters<typeof Document>[0]['fonts']>;
@@ -59,7 +59,10 @@ export function createDocxDocument(data: ResumeData, theme: ResumeTheme, ats = f
       case 'projects': return data.projects.flatMap(item => entryBlock([title(item.name), ...(item.role ? [meta(item.role)] : []), paragraph(item.description), ...bulletParagraphs(item.bullets), ...(item.technologies.length ? [meta(item.technologies.join(' · '))] : []), ...(item.url ? [hyperlink(urlLabel(item.url), item.url)] : [])]));
       case 'certificates': return data.certificates.flatMap(item => entryBlock([title(item.name), meta([item.issuer, item.date].filter(Boolean).join(' · ')), ...(item.url ? [hyperlink(urlLabel(item.url), item.url)] : [])]));
       case 'languages': return data.languages.flatMap(item => entryBlock([title(item.name), paragraph(item.level, true)]));
-      case 'links': return data.links.flatMap(item => [hyperlink(item.label || urlLabel(item.url), item.url), meta(urlLabel(item.url))]);
+      case 'links': return data.links.flatMap(item => [hyperlink(item.label.trim() || urlLabel(item.url), item.url), ...(item.label.trim() && item.url.trim() ? [meta(urlLabel(item.url))] : [])]);
+      case 'interests': return data.interests.some(item => item.description.trim())
+        ? data.interests.flatMap(item => entryBlock([title(item.name), ...(item.description.trim() ? [meta(item.description)] : [])]))
+        : [paragraph(data.interests.map(item => item.name).filter(Boolean).join(' · '))];
       case 'consent': return [new Paragraph({ children: rich(data.consent, { size: Math.max(14, size - 4), color: hex(c.muted) }), spacing: { before: 220 }, widowControl: true, keepNext: keepSection })];
     }
   };
@@ -76,11 +79,11 @@ export function createDocxDocument(data: ResumeData, theme: ResumeTheme, ats = f
     if (theme.keepSectionsTogether) children.push(new Paragraph({ children: [new TextRun({ text: '', size: 2 })], keepNext: false, spacing: { before: 0, after: 0, line: 1 } }));
     return children;
   };
-  const banner = !ats && theme.headerStyle === 'banner';
+  const banner = !ats && (theme.headerStyle === 'banner' || theme.headerStyle === 'hero');
   const headerColor = banner ? contrastColor(c.accent) : c.text;
   const alignment = theme.headerStyle === 'centered' && !ats ? AlignmentType.CENTER : AlignmentType.LEFT;
   const header = [
-    new Paragraph({ children: rich(!ats && d.nameStyle === 'uppercase' ? fullName(data, theme.language).toLocaleUpperCase(theme.language) : !ats && d.nameStyle === 'stacked' ? [data.personal.firstName, data.personal.lastName].filter(Boolean).join('\n') || fullName(data, theme.language) : fullName(data, theme.language), { size: t.nameSize * 2, bold: true, font: t.headingFont, color: hex(headerColor) }), alignment, spacing: { after: 110 }, keepNext: true }),
+    new Paragraph({ children: rich(!ats && d.nameStyle === 'uppercase' ? fullName(data, theme.language).toLocaleUpperCase(theme.language) : !ats && (d.nameStyle === 'stacked' || d.nameStyle === 'split') ? [data.personal.firstName, data.personal.lastName].filter(Boolean).join('\n') || fullName(data, theme.language) : fullName(data, theme.language), { size: t.nameSize * 2, bold: true, font: t.headingFont, color: hex(headerColor) }), alignment, spacing: { after: 110 }, keepNext: true }),
     new Paragraph({ children: rich(data.personal.title, { size: size + 6, color: hex(banner ? headerColor : c.accent) }), alignment, spacing: { after: 140 }, keepNext: true }),
     ...(!ats && theme.layout !== 'single' && d.contactPlacement === 'sidebar' ? [] : [new Paragraph({ children: rich([data.personal.location, data.personal.email, data.personal.phone, data.personal.website].filter(Boolean).join(' · '), { size: size - 2, color: hex(banner ? headerColor : c.muted) }), alignment, spacing: { after: 100 } })]),
   ];
@@ -90,8 +93,7 @@ export function createDocxDocument(data: ResumeData, theme: ResumeTheme, ats = f
   if (showPhoto || banner) {
     const photoWidth = mmToTwip(theme.photo.size);
     const imagePixels = theme.photo.size * 96 / 25.4;
-    const isPortrait = theme.photo.shape === 'portrait' || theme.photo.shape === 'portrait-rounded';
-    const heightPixels = isPortrait ? Math.round(imagePixels * 1.3) : imagePixels;
+    const heightPixels = Math.round(imagePixels * photoAspect(theme.photo.shape));
     const identity = new TableCell({ children: header, width: { size: pageWidth - (showPhoto ? photoWidth : 0), type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, shading: banner ? { fill: hex(c.accent), type: ShadingType.CLEAR } : undefined, margins: { top: banner ? 180 : 0, bottom: banner ? 180 : 0, left: 180, right: 180 } });
     const picture = data.personal.photo ? new Paragraph({ children: [new ImageRun({ type: portrait || data.personal.photo.startsWith('data:image/png') ? 'png' : 'jpg', data: portrait ? Buffer.from(portrait) : Buffer.from(data.personal.photo.split(',')[1], 'base64'), transformation: { width: imagePixels, height: heightPixels }, altText: { name: 'Zdjęcie profilowe', title: fullName(data, theme.language), description: `Zdjęcie profilowe — ${fullName(data, theme.language)}` } })], alignment: AlignmentType.CENTER, spacing: { after: 0, before: 0 } }) : new Paragraph({ children: [new TextRun({ text: theme.language === 'en' ? 'PHOTO' : 'MIEJSCE NA ZDJĘCIE', font: t.fontFamily, size: 13, color: hex(accentColor()) })], alignment: AlignmentType.CENTER, spacing: { before: Math.max(0, photoWidth / 2 - 150), after: Math.max(0, photoWidth / 2 - 150) } });
     const imageCell = new TableCell({ children: [picture], width: { size: photoWidth, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, shading: { fill: hex(data.personal.photo && banner ? c.accent : c.sidebar), type: ShadingType.CLEAR }, margins: { top: 0, bottom: 0, left: 0, right: 0 } });

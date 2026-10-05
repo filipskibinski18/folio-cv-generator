@@ -1,12 +1,13 @@
 import type { ResumeTemplate, ResumeTheme, SectionId } from '../types/resume';
 import { sectionIds, sectionLabels } from '../types/resume';
 import { createDesignPresets } from './designPresets';
+import { createSignaturePresets } from './signaturePresets';
 
-const sidebarSections: SectionId[] = ['skills', 'languages', 'certificates', 'links'];
+const sidebarSections: SectionId[] = ['skills', 'languages', 'certificates', 'links', 'interests'];
 const base: ResumeTheme = {
   language: 'pl', icons: { style: 'none', size: 14 },
   keepSectionsTogether: true,
-  design: { entryStyle: 'plain', decoration: 'none', nameStyle: 'natural', contactPlacement: 'header', contactIcons: false, skillMeter: 'numbers', sidebarPadding: 12, continuationGap: 24 },
+  design: { entryStyle: 'plain', decoration: 'none', nameStyle: 'natural', contactPlacement: 'header', contactIcons: false, skillMeter: 'numbers', sidebarPadding: 12, continuationGap: 24, sidebarStyle: 'box' },
   headerStyle: 'accent', sectionStyle: 'underline',
   photo: { isVisible: true, shape: 'circle', size: 42, position: 'sidebar', borderWidth: 2, borderColor: '#ffffff' },
   typography: { fontFamily: 'Inter', headingFont: 'Inter', baseSize: 8.8, headingSize: 10, nameSize: 28, lineHeight: 1.38, tracking: 0 },
@@ -118,5 +119,7 @@ export const presets: ResumeTemplate[] = [
   template('mono', 'Mono Essential', 'Proste jednokolumnowe CV z czytelną typografią.', { ...base, layout: 'single', headerStyle: 'centered', sectionStyle: 'underline', icons: { style: 'none', size: 14 }, typography: { ...base.typography, fontFamily: 'SourceSans3', headingFont: 'SourceSans3', headingSize: 10, nameSize: 30 }, colors: { ...base.colors, accent: '#18181b', sidebar: '#fafafa', separator: '#fafafa' }, photo: { ...base.photo, isVisible: true, position: 'right', size: 32, borderWidth: 0 }, geometry: { ...base.geometry, sectionGap: 9, radius: 2 } }),
   template('ochre', 'Ochre Studio', 'Musztardowe detale i subtelne ikony w prawej kolumnie.', { ...base, layout: 'sidebar-right', headerStyle: 'accent', sectionStyle: 'filled', icons: { style: 'outline', size: 14 }, typography: { ...base.typography, fontFamily: 'Inter', headingFont: 'Lora', headingSize: 10, nameSize: 30 }, colors: { ...base.colors, accent: '#956f16', sidebar: '#fbf6e6', separator: '#fbf6e6' }, photo: { ...base.photo, isVisible: true, position: 'left', size: 32, borderWidth: 0 }, geometry: { ...base.geometry, sectionGap: 9, radius: 2 } }),
   ...createDesignPresets(base),
+  // Shown first in the gallery through its category; appended so existing indices stay stable.
+  ...createSignaturePresets(base),
 ];
 export const defaultTheme = structuredClone(base);
