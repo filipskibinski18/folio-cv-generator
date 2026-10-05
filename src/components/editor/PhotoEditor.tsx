@@ -1,6 +1,6 @@
 import { tr } from '../../lib/i18n';
 import { useEffect, useRef, useState } from 'react';
-import { Camera, ImagePlus, LoaderCircle, Trash2, UserRound, SlidersHorizontal } from 'lucide-react';
+import { Camera, ImagePlus, LoaderCircle, Trash2, UserRound, SlidersHorizontal, Plus } from 'lucide-react';
 import { useResumeStore } from '../../store/useResumeStore';
 import { createPhotoData, cropRectangle, defaultCrop, loadLocalPhoto, photoRadius } from '../../lib/photo';
 import type { PhotoCrop } from '../../lib/photo';
@@ -8,7 +8,7 @@ import type { ResumeTheme } from '../../types/resume';
 import { Dialog } from '../Dialog';
 import { SelectField, Slider } from './Fields';
 
-export function PhotoEditor({ initialShowSettings = false }: { initialShowSettings?: boolean }) {
+export function PhotoEditor({ initialShowSettings = false, compact = false }: { initialShowSettings?: boolean; compact?: boolean }) {
   const photo = useResumeStore(state => state.data.personal.photo);
   const theme = useResumeStore(state => state.theme);
   const update = useResumeStore(state => state.updatePersonal);
@@ -37,41 +37,7 @@ export function PhotoEditor({ initialShowSettings = false }: { initialShowSettin
   const isPortrait = theme.photo.shape === 'portrait' || theme.photo.shape === 'portrait-rounded';
   const rect = source ? cropRectangle(source.image.naturalWidth, source.image.naturalHeight, crop) : undefined;
 
-  return <div className="photo-editor">
-    <div className="photo-upload-row">
-      <div className="photo-thumbnail" style={{ borderRadius: photoRadius(theme.photo.shape, 64) }}>
-        {photo ? (
-          <img src={photo} alt={tr("Twoje zdjęcie profilowe")} />
-        ) : (
-          <div className="photo-placeholder-icon" title={tr("Miejsce na zdjęcie")}>
-            <UserRound size={32} strokeWidth={1.4} />
-            <span className="photo-badge"><Camera size={10} strokeWidth={2} /></span>
-          </div>
-        )}
-      </div>
-      <div className="photo-upload-content">
-        <span className="mini-label">{tr("ZDJĘCIE PROFILOWE")}</span>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          <button className="secondary-button" disabled={busy} onClick={() => fileRef.current?.click()}>
-            {busy ? <LoaderCircle size={14} className="spin" /> : <ImagePlus size={14} />}
-            {photo ? tr("Zmień zdjęcie") : tr("Dodaj zdjęcie")}
-          </button>
-          <button
-            type="button"
-            className={`secondary-button ${showSettings ? 'selected' : ''}`}
-            title={tr("Dopasuj rozmiar i ułożenie zdjęcia")}
-            onClick={() => setShowSettings(!showSettings)}
-          >
-            <SlidersHorizontal size={13} />{tr("Formatuj")}</button>
-        </div>
-        <small>{tr("JPG, PNG lub WEBP · do 10 MB")}</small>
-      </div>
-      {photo && <button className="icon-button danger" aria-label={tr("Usuń zdjęcie")} onClick={() => update({ photo: '' })}><Trash2 size={15} /></button>}
-    </div>
-    <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" aria-label={tr("Wybierz zdjęcie profilowe")} onChange={event => { const file = event.target.files?.[0]; if (file) void load(file); event.target.value = ''; }} />
-
-    {showSettings && (
-      <div className="photo-settings-card" style={{ marginTop: 14, padding: 12, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--ui-input)' }}>
+  const settings = (<div className="photo-settings-card" style={{ marginTop: 14, padding: 12, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--ui-input)' }}>
         <label className="check-field">
           <input type="checkbox" checked={theme.photo.isVisible} onChange={event => updateTheme({ photo: { ...theme.photo, isVisible: event.target.checked } })} />{tr("Pokaż zdjęcie lub ramkę na CV")}</label>
         <div className="field-grid">
@@ -125,10 +91,50 @@ export function PhotoEditor({ initialShowSettings = false }: { initialShowSettin
             ]}
           />
         </div>
-      </div>
-    )}
+      </div>);
 
-    <p className="photo-help">{tr("Wybierz pozycję")}<strong>{tr("„Lewy górny róg”")}</strong>{tr(", aby zdjęcie znalazło się na samej górze bocznego paska, tak jak w najpopularniejszych szablonach CV.")}</p>
+  return <div className={`photo-editor ${compact ? 'photo-editor-compact' : ''}`}>
+    {compact ? <>
+      <button className="photo-trigger" disabled={busy} onClick={() => fileRef.current?.click()} aria-label={tr(photo ? 'Zmień zdjęcie' : 'Dodaj zdjęcie')}>
+        {photo ? <img src={photo} alt={tr('Twoje zdjęcie profilowe')} /> : busy ? <LoaderCircle size={22} className="spin" /> : <><span><Plus size={24} strokeWidth={1.6} /></span><span>{tr('Dodaj zdjęcie')}</span></>}
+      </button>
+      <button className="text-button photo-format-button" onClick={() => setShowSettings(true)}><SlidersHorizontal size={13} />{tr('Formatuj')}</button>
+      {photo && <button className="text-button danger" onClick={() => update({ photo: '' })}><Trash2 size={13} />{tr('Usuń zdjęcie')}</button>}
+    </> : <div className="photo-upload-row">
+      <div className="photo-thumbnail" style={{ borderRadius: photoRadius(theme.photo.shape, 64) }}>
+        {photo ? (
+          <img src={photo} alt={tr("Twoje zdjęcie profilowe")} />
+        ) : (
+          <div className="photo-placeholder-icon" title={tr("Miejsce na zdjęcie")}>
+            <UserRound size={32} strokeWidth={1.4} />
+            <span className="photo-badge"><Camera size={10} strokeWidth={2} /></span>
+          </div>
+        )}
+      </div>
+      <div className="photo-upload-content">
+        <span className="mini-label">{tr("ZDJĘCIE PROFILOWE")}</span>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <button className="secondary-button" disabled={busy} onClick={() => fileRef.current?.click()}>
+            {busy ? <LoaderCircle size={14} className="spin" /> : <ImagePlus size={14} />}
+            {photo ? tr("Zmień zdjęcie") : tr("Dodaj zdjęcie")}
+          </button>
+          <button
+            type="button"
+            className={`secondary-button ${showSettings ? 'selected' : ''}`}
+            title={tr("Dopasuj rozmiar i ułożenie zdjęcia")}
+            onClick={() => setShowSettings(!showSettings)}
+          >
+            <SlidersHorizontal size={13} />{tr("Formatuj")}</button>
+        </div>
+        <small>{tr("JPG, PNG lub WEBP · do 10 MB")}</small>
+      </div>
+      {photo && <button className="icon-button danger" aria-label={tr("Usuń zdjęcie")} onClick={() => update({ photo: '' })}><Trash2 size={15} /></button>}
+    </div>}
+    <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" aria-label={tr("Wybierz zdjęcie profilowe")} onChange={event => { const file = event.target.files?.[0]; if (file) void load(file); event.target.value = ''; }} />
+
+    {showSettings && (compact ? <Dialog title={tr("Formatowanie zdjęcia")} onClose={() => setShowSettings(false)}>{settings}</Dialog> : settings)}
+
+    {!compact && showSettings && <p className="photo-help">{tr("Wybierz pozycję")}<strong>{tr("„Lewy górny róg”")}</strong>{tr(", aby zdjęcie znalazło się na samej górze bocznego paska, tak jak w najpopularniejszych szablonach CV.")}</p>}
     {error && <p className="error-text" role="alert">{error}</p>}
     {source && rect && <Dialog title={tr("Dopasuj swoje zdjęcie")} onClose={() => setSource(undefined)}>
       <p className="dialog-description">{tr("Ustaw kadr. Zdjęcie zostanie zapisane lokalnie w Twoim CV.")}</p>

@@ -33,5 +33,5 @@ export function saveAppTheme(theme: AppTheme): void {
 
 export function applyAppTheme(theme: AppTheme): void {
   document.documentElement.dataset.theme = theme;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#141e1b' : '#25564a');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#231e25' : '#573d53');
 }

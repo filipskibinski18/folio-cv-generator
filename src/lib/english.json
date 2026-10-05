@@ -583,5 +583,20 @@
   "Glicyniowa kolumna, delikatne łuki i elegancki portret.": "A wisteria column, soft arches and an elegant portrait.",
   "Tryb ciemny": "Dark mode",
   "Włącz tryb jasny": "Switch to light mode",
-  "Włącz tryb ciemny": "Switch to dark mode"
+  "Włącz tryb ciemny": "Switch to dark mode",
+  "Wygląd CV": "Resume design",
+  "Kolory, typografia i detale dokumentu.": "Document colors, typography and details.",
+  "Kolumny, kolejność i widoczność sekcji.": "Columns, section order and visibility.",
+  "Wybierz punkt wyjścia dla swojego CV.": "Choose a starting point for your resume.",
+  "Dopasowanie ATS": "ATS compatibility",
+  "Sprawdź CV i dopasuj je do oferty pracy.": "Review your resume and match it to a job offer.",
+  "Importuj CV": "Import resume",
+  "Eksportuj": "Export",
+  "Dane kontaktowe w Twoim CV.": "Contact details in your resume.",
+  "Edytuj treść wybranej sekcji.": "Edit the content of this section.",
+  "Wybierz sekcję CV": "Choose a resume section",
+  "Formatowanie zdjęcia": "Photo settings",
+  "Kliknij element, aby go edytować.": "Click an element to edit it.",
+  "Wybierz format, w którym chcesz zapisać dokument.": "Choose the format to save your document.",
+  "Wgraj plik PDF lub Word i sprawdź rozpoznane dane przed ich zastosowaniem. Twój dokument pozostaje na urządzeniu.": "Upload a PDF or Word file and review the extracted details before applying them. Your document stays on your device."
 }

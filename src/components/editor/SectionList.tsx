@@ -8,6 +8,23 @@ import { Award, BookOpen, BriefcaseBusiness, ChevronDown, Eye, EyeOff, FileText,
 import type { ResumeTheme, SectionId } from '../../types/resume';
 import { useResumeStore } from '../../store/useResumeStore';
 import { PersonalEditor, SectionEditor } from './DataEditor';
+import { PhotoEditor } from './PhotoEditor';
+
+export function ContentEditor() {
+  const [active, setActive] = useState<SectionId | 'personal'>('personal');
+  const sections = useResumeStore(state => state.theme.sections);
+  const current = sections.find(section => section.id === active);
+  const title = active === 'personal' ? tr('Dane osobowe') : current?.title || '';
+  return <div className="content-editor">
+    <div className="content-heading">
+      <div><h1>{title}</h1><p>{tr(active === 'personal' ? 'Dane kontaktowe w Twoim CV.' : 'Edytuj treść wybranej sekcji.')}</p>
+        <label className="section-picker"><span className="sr-only">{tr('Wybierz sekcję CV')}</span><select value={active} onChange={event => setActive(event.target.value as SectionId | 'personal')}><option value="personal">{tr('Dane osobowe')}</option>{sections.map(section => <option key={section.id} value={section.id}>{section.title}</option>)}</select></label>
+      </div>
+      {active === 'personal' && <PhotoEditor compact />}
+    </div>
+    <div key={active}>{active === 'personal' ? <PersonalEditor showPhoto={false} /> : <SectionEditor section={active} />}</div>
+  </div>;
+}
 
 const icons = { summary: FileText, experience: BriefcaseBusiness, education: BookOpen, skills: Award, projects: Layers3, certificates: ShieldCheck, languages: Languages, links: Link2, consent: Globe2 };
 function SortableSection({ section, open, onToggle, layoutOnly }: { section: ResumeTheme['sections'][number]; open: boolean; onToggle: () => void; layoutOnly: boolean }) {

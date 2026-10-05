@@ -6,14 +6,13 @@ import { uid } from '../../lib/format';
 import { AddButton, Field, ItemCard, SelectField } from './Fields';
 import { PhotoEditor } from './PhotoEditor';
 
-export function PersonalEditor() {
+export function PersonalEditor({ showPhoto = true }: { showPhoto?: boolean }) {
   const personal = useResumeStore(state => state.data.personal); const update = useResumeStore(state => state.updatePersonal);
-  return <div className="form-content"><PhotoEditor /><div className="field-grid"><Field label={tr("Imię")} value={personal.firstName} onChange={firstName => update({ firstName })} /><Field label={tr("Nazwisko")} value={personal.lastName} onChange={lastName => update({ lastName })} /></div>
+  return <div className="form-content">{showPhoto && <PhotoEditor />}<div className="field-grid"><Field label={tr("Imię")} value={personal.firstName} onChange={firstName => update({ firstName })} /><Field label={tr("Nazwisko")} value={personal.lastName} onChange={lastName => update({ lastName })} /></div>
     <Field label={tr("Stanowisko / tytuł zawodowy")} value={personal.title} onChange={title => update({ title })} placeholder={tr("np. Senior Product Designer")} />
     <Field label={tr("Adres e-mail")} type="email" value={personal.email} onChange={email => update({ email })} />
     <div className="field-grid"><Field label={tr("Telefon")} type="tel" value={personal.phone} onChange={phone => update({ phone })} /><Field label={tr("Lokalizacja")} value={personal.location} onChange={location => update({ location })} /></div>
     <Field label={tr("Strona internetowa")} value={personal.website} onChange={website => update({ website })} placeholder={tr("twojeportfolio.pl")} />
-    <div className="editor-note"><span className="note-dot" />{tr("Pisz konkretnie. Twoje doświadczenie robi różnicę.")}</div>
   </div>;
 }
 function BulletsEditor({ bullets, onChange, depth = 0 }: { bullets: Bullet[]; onChange: (items: Bullet[]) => void; depth?: number }) {

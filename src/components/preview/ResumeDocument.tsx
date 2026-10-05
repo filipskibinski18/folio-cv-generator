@@ -143,8 +143,9 @@ export function ResumeDocument({ data, theme: t, onRender, continuations = [], s
         backgroundColor: ['filled', 'capsule'].includes(t.sectionStyle) ? (isSide && isDarkSidebar ? 'rgba(255, 255, 255, 0.12)' : c.sidebar) : undefined,
         borderRadius: t.sectionStyle === 'capsule' ? 12 : t.sectionStyle === 'filled' ? g.radius : 0,
         borderLeftWidth: t.sectionStyle === 'rail' ? 2 : 0, borderLeftColor: sAccent,
-        paddingLeft: t.sectionStyle === 'rail' ? 8 : undefined,
-        padding: ['filled', 'capsule'].includes(t.sectionStyle) ? '4 6' : 0,
+        paddingLeft: t.sectionStyle === 'rail' ? 8 : ['filled', 'capsule'].includes(t.sectionStyle) ? 6 : 0,
+        paddingRight: ['filled', 'capsule'].includes(t.sectionStyle) ? 6 : 0,
+        paddingTop: ['filled', 'capsule'].includes(t.sectionStyle) ? 4 : 0,
         paddingBottom: ['filled', 'capsule'].includes(t.sectionStyle) ? 4 : t.sectionStyle === 'plain' ? 2 : 4,
         marginBottom: 6,
       }}>

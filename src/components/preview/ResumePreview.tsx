@@ -4,7 +4,7 @@ import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
 import { getDocument, GlobalWorkerOptions, TextLayer } from 'pdfjs-dist';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import 'pdfjs-dist/web/pdf_viewer.css';
-import { Check, FileCheck2, Focus, LoaderCircle, Minus, Plus, RefreshCw, Sparkles } from 'lucide-react';
+import { Check, FileCheck2, Focus, LoaderCircle, Minus, Plus, RefreshCw, MousePointer2, Eye } from 'lucide-react';
 import { useResumeStore } from '../../store/useResumeStore';
 import { createPdfPreview } from '../../services/exportPdf';
 import { presets } from '../../data/presets';
@@ -134,25 +134,41 @@ export function ResumePreview({ onSelect, selected }: { onSelect: (target: Edito
     <section className="preview-panel" aria-label={tr("Podgląd CV")}>
       <div className="preview-toolbar">
         <div className="live-label">
-          <span className="live-dot" />{tr("PODGLĄD NA ŻYWO")}</div>
+          <Eye size={17} strokeWidth={1.6} />{tr("Podgląd")}</div>
         <div className="preview-template">
           <FileCheck2 size={14} />
           {active?.name || tr("Własny wygląd")}
-          <span>{tr("A4")}</span>
+          <span>{pdf ? pdf.numPages : 0} {tr(pdf?.numPages === 1 ? "strona" : "str.")}</span>
         </div>
+        <div className="preview-toolbar-controls"><div className="zoom-controls">
+          <button
+            className="icon-button"
+            aria-label={tr("Pomniejsz podgląd")}
+            onClick={() => setZoom(Math.max(0.25, Number((actualZoom - 0.1).toFixed(2))))}
+          >
+            <Minus size={15} />
+          </button>
+          <span>{Math.round(actualZoom * 100)}%</span>
+          <button
+            className="icon-button"
+            aria-label={tr("Powiększ podgląd")}
+            onClick={() => setZoom(Math.min(1.5, Number((actualZoom + 0.1).toFixed(2))))}
+          >
+            <Plus size={15} />
+          </button>
+          <i />
+          <button
+            className="icon-button"
+            title={tr("Dopasuj do szerokości")}
+            aria-label={tr("Dopasuj podgląd")}
+            onClick={() => setZoom('fit')}
+          >
+            <Focus size={16} />
+          </button>
+        </div></div>
       </div>
 
       <div className="preview-scroll" ref={scrollRef}>
-        <div className="preview-caption">
-          <span>{tr("TWÓJ NASTĘPNY ROZDZIAŁ")}</span>
-          <span>{pdf ? `${pdf.numPages} ${tr(pdf.numPages === 1 ? 'strona' : 'str.')}` : 'A4'}</span>
-        </div>
-
-        <div className="preview-interactive-hint">
-          <Sparkles size={13} color="#2563eb" />
-          <span>{tr("Kliknij element CV, aby edytować go w panelu po lewej stronie.")}</span>
-        </div>
-
         {error && (
           <div className="preview-error" role="alert">
             <strong>{tr("Podgląd wymaga odświeżenia")}</strong>
@@ -182,10 +198,6 @@ export function ResumePreview({ onSelect, selected }: { onSelect: (target: Edito
             <span className="page-index">{tr("STRONA")}{index + 1} / {pdf.numPages}</span>
           </div>
         ))}
-
-        <div className="preview-end">
-          <span />{tr("Zaprojektowane przez Ciebie. Gotowe na nowe możliwości.")}<span />
-        </div>
       </div>
 
       <div className="preview-footer">
@@ -199,34 +211,7 @@ export function ResumePreview({ onSelect, selected }: { onSelect: (target: Edito
           )}
         </span>
 
-        <div className="zoom-controls">
-          <button
-            className="icon-button"
-            aria-label={tr("Pomniejsz podgląd")}
-            onClick={() => setZoom(Math.max(0.25, Number((actualZoom - 0.1).toFixed(2))))}
-          >
-            <Minus size={15} />
-          </button>
-          <span>{Math.round(actualZoom * 100)}%</span>
-          <button
-            className="icon-button"
-            aria-label={tr("Powiększ podgląd")}
-            onClick={() => setZoom(Math.min(1.5, Number((actualZoom + 0.1).toFixed(2))))}
-          >
-            <Plus size={15} />
-          </button>
-          <i />
-          <button
-            className="icon-button"
-            title={tr("Dopasuj do szerokości")}
-            aria-label={tr("Dopasuj podgląd")}
-            onClick={() => setZoom('fit')}
-          >
-            <Focus size={16} />
-          </button>
-        </div>
-
-        <span className="paper-size">{tr("210 × 297 mm")}</span>
+        <span className="preview-edit-help"><MousePointer2 size={13} />{tr("Kliknij element, aby go edytować.")}</span><span className="paper-size">A4</span>
       </div>
 
     </section>

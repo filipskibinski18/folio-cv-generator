@@ -30,6 +30,13 @@ async function inspect(data: ResumeData, theme: ResumeTheme) {
     if (projectTitle && projectDescription) expect(projectTitle.transform[5] - projectDescription.transform[5]).toBeGreaterThan(5);
     const pageText = items.map(item => item.str).join(' '); text += pageText; pageTexts.push(pageText.replace(/\s/g, '')); count += items.length;
     const pageRegions = regions.filter(region => region.page === number);
+    if (theme.sectionStyle === 'rail') for (const heading of pageRegions.filter(region => region.target.mode === 'layout')) {
+      const headingText = items.filter(item => item.str.trim() && item.transform[4] >= heading.left - 1 && item.transform[4] < heading.left + heading.width && page.view[3] - item.transform[5] >= heading.top && page.view[3] - item.transform[5] < heading.top + heading.height);
+      expect(headingText.length, `Missing heading: ${heading.target.section}`).toBeGreaterThan(0);
+      // Check the exported text position, so an overwritten padding value cannot
+      // put the first glyph on the vertical border in either column.
+      for (const item of headingText) expect(item.transform[4] - heading.left - theme.geometry.sectionPadding, `Heading overlaps rail: ${theme.typography.headingFont} / ${heading.target.section}`).toBeGreaterThanOrEqual(8);
+    }
     for (const region of pageRegions) {
       if (number > 1 && region.target.section !== 'consent') expect(region.top).toBeGreaterThanOrEqual(mmToPt(theme.geometry.margins.top) + theme.design.continuationGap + (region.column === 'sidebar' ? theme.design.sidebarPadding : 0) - 1);
       expect(region.left).toBeGreaterThanOrEqual(0); expect(region.top).toBeGreaterThanOrEqual(0);
@@ -64,6 +71,12 @@ async function inspect(data: ResumeData, theme: ResumeTheme) {
   return { text: text.replace(/\s/g, ''), pageTexts, pages, count, images, outOfBounds, regions, sectionHeights };
 }
 describe('Wektorowy PDF A4 i podział stron', () => {
+  it('oddziela nagłówki od pionowych linii we wszystkich szablonach rail', async () => {
+    for (const preset of presets.filter(preset => preset.theme.sectionStyle === 'rail')) {
+      const result = await inspect(sampleResume, preset.theme);
+      expect(result.outOfBounds, preset.id).toEqual([]);
+    }
+  }, 60000);
   it('nie dodaje jasnych pasków pod zdjęciem bez ramki i zachowuje włączoną ramkę', async () => {
     const require = createRequire(realpathSync(resolve('node_modules/pdfjs-dist/package.json')));
     const { createCanvas } = require('@napi-rs/canvas');
