@@ -13,7 +13,7 @@ describe('Style catalogue and editable export', () => {
     for (const category of templateCategories) expect(presets.filter(preset => categoriesFor(preset).includes(category.id)).length).toBeGreaterThanOrEqual(4);
     expect(new Set(presets.map(preset => JSON.stringify(preset.theme))).size).toBe(presets.length);
     expect(new Set(presets.map(preset => preset.theme.design.entryStyle)).size).toBe(4);
-    expect(new Set(presets.map(preset => preset.theme.design.decoration)).size).toBe(12);
+    expect(new Set(presets.map(preset => preset.theme.design.decoration)).size).toBeGreaterThanOrEqual(8);
     // Every new composition option is used by at least one built-in template.
     expect(new Set(presets.map(preset => preset.theme.design.sidebarStyle))).toEqual(new Set(['box', 'bleed', 'line']));
     for (const style of ['bar', 'numbered', 'side'] as const) expect(presets.some(preset => preset.theme.sectionStyle === style), style).toBe(true);
@@ -37,7 +37,7 @@ describe('Style catalogue and editable export', () => {
     }
   });
   it('exports native date tables and removes them in ATS', async () => {
-    const theme = presets.find(preset => preset.id === 'mono-ledger')!.theme;
+    const theme = { ...defaultTheme, layout: 'single' as const, design: { ...defaultTheme.design, entryStyle: 'table' as const } };
     for (const ats of [false, true]) {
       const zip = await JSZip.loadAsync(await Packer.toBuffer(createDocxDocument(sampleResume, theme, ats)));
       const xml = await zip.file('word/document.xml')!.async('string');
@@ -47,7 +47,7 @@ describe('Style catalogue and editable export', () => {
     }
   });
   it('keeps all contacts when moved to the sidebar and preserves multiline names', async () => {
-    const theme = presets.find(preset => preset.id === 'burgundy-archive')!.theme;
+    const theme = presets.find(preset => preset.id === 'oxford')!.theme;
     const zip = await JSZip.loadAsync(await Packer.toBuffer(createDocxDocument(sampleResume, theme)));
     const xml = await zip.file('word/document.xml')!.async('string');
     expect(xml).toContain('KONTAKT'); expect(xml).toContain('<w:br/>');

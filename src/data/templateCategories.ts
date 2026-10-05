@@ -1,7 +1,7 @@
 import type { ResumeTemplate, TemplateCategory } from '../types/resume';
 
 export const templateCategories: { id: TemplateCategory; label: string; description: string }[] = [
-  { id: 'signature', label: 'Wyróżnione', description: 'Nowa kolekcja: kolumny od krawędzi do krawędzi, nagłówki hero i redakcyjne siatki.' },
+  { id: 'signature', label: 'Wyróżnione', description: 'Nasze typy: kolumny od krawędzi do krawędzi, nagłówki hero i redakcyjne siatki.' },
   { id: 'minimal', label: 'Minimalistyczne', description: 'Prosta forma i dużo światła.' },
   { id: 'classic', label: 'Klasyczne', description: 'Ponadczasowe kroje i spokojne kompozycje.' },
   { id: 'business', label: 'Biznesowe', description: 'Wyrazisty profil i uporządkowane doświadczenie.' },
@@ -10,14 +10,6 @@ export const templateCategories: { id: TemplateCategory; label: string; descript
   { id: 'technical', label: 'Techniczne', description: 'Siatki, tabele i czytelne daty.' },
   { id: 'artistic', label: 'Artystyczne', description: 'Odręczne litery i dekoracyjne detale.' },
 ];
-const legacy: Record<string, TemplateCategory[]> = {
-  modern: ['business'], executive: ['classic', 'editorial'], creative: ['business', 'creative'], 'warm-sand': ['classic', 'editorial'],
-  emerald: ['business'], nordic: ['business'], minimalist: ['minimal'], bordeaux: ['editorial', 'classic'],
-  'classic-swiss': ['classic', 'minimal'], blueprint: ['technical', 'business'], atelier: ['creative'], midnight: ['creative'],
-  editorial: ['editorial'], azure: ['business'], sage: ['classic'], cobalt: ['creative'], rose: ['editorial', 'creative'],
-  copper: ['editorial'], graphite: ['technical'], violet: ['creative'], ivory: ['editorial', 'classic'], teal: ['technical'],
-  mono: ['minimal'], ochre: ['artistic', 'creative'],
-};
 export function categoriesFor(template: ResumeTemplate): TemplateCategory[] {
-  return template.categories?.length ? template.categories : template.builtIn ? legacy[template.id] ?? ['classic'] : ['personal'];
+  return template.categories?.length ? template.categories : template.builtIn ? ['classic'] : ['personal'];
 }

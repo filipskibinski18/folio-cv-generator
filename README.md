@@ -19,12 +19,11 @@ Aplikacja działa w **100% lokalnie w przeglądarce**: dane, zdjęcia i szablony
 - 🖱️ **Bezpośrednia edycja z podglądu (Click-to-edit)**:
   - Kliknij dowolny element w oknie podglądu (imię, dane kontaktowe, zdjęcie, nagłówek sekcji czy konkretne stanowisko w historii pracy), aby natychmiast otworzyć jego dedykowany formularz w lewym panelu edytora.
   - Wyraźne podświetlenie edytowanego elementu i szybki powrót („Wróć do listy” / klawisz Escape).
-- 🎨 **115 profesjonalnych szablonów i Style w 1 kliknięcie**:
-  - Kolekcja **Wyróżnione** (15 szablonów) z nowymi możliwościami renderera: kolumna boczna od krawędzi do krawędzi strony lub oddzielona tylko linią, nagłówek „hero” na całą szerokość, tytuły sekcji numerowane (01, 02…) lub umieszczone na marginesie, dwukolorowe imię i nazwisko, oś czasu z węzłami oraz nowe dekoracje.
+- 🎨 **31 dopracowanych szablonów i Style w 1 kliknięcie**:
+  - Starannie wybrana kolekcja zamiast setki wariantów kolorystycznych: każdy szablon ma własną kompozycję (kolumna od krawędzi strony, kolumna oddzielona linią, nagłówek „hero”, tytuły sekcji na marginesie lub numerowane, dwie równe kolumny, wpisy z datą wyrównaną do prawej, zwarte linie umiejętności).
+  - 8 kategorii: **Wyróżnione**, **Minimalistyczne**, **Klasyczne**, **Biznesowe**, **Kreatywne**, **Eleganckie**, **Techniczne** i **Artystyczne**, a także **Moje** na własne kompozycje.
   - Galeria pokazuje prawdziwe miniatury pierwszej strony (`npm run thumbnails` po zmianie szablonów lub renderera).
-  - Pozostałe szablony podzielone na 7 kategorii: **Minimalistyczne**, **Klasyczne**, **Biznesowe**, **Kreatywne**, **Eleganckie**, **Techniczne** i **Artystyczne**, a także kategoria **Moje** na własne kompozycje.
-  - Filtry szablonów według układu kolumn, obecności zdjęcia czy stylu oraz zintegrowana wyszukiwarka.
-  - „Styl w 1 kliknięcie” (Design Presets): 12 kompletnych palet zmieniających jednocześnie tło strony i kolumny, tekst, akcenty, separatory oraz ramkę zdjęcia. Każdy ze 100 szablonów ma domyślnie włączone zdjęcie.
+  - Filtry według układu kolumn, obecności zdjęcia czy ikon oraz wyszukiwarka; „Styl w 1 kliknięcie” (palety kolorów) działa z każdym szablonem.
   - Możliwość zapisu, duplikowania, edycji oraz eksportu/importu własnych kompozycji szablonów.
 - 📥 **Lokalny import PDF i DOCX**:
   - Zaawansowany parser działający po stronie klienta (PDF.js + JSZip) obsługujący pliki do 15 MB.
@@ -93,8 +92,7 @@ src/
 ├── types/resume.ts             # Silne typy TypeScript i schematy walidacyjne Zod
 ├── data/
 │   ├── sampleResume.ts         # Realistyczne, przykładowe dane początkowe CV
-│   ├── presets.ts              # 100 wbudowanych szablonów dokumentu
-│   ├── designPresets.ts        # Presety typograficzne i kolorystyczne (Style w 1 kliknięcie)
+│   ├── presets.ts              # 31 wbudowanych szablonów dokumentu
 │   └── templateCategories.ts   # Kategoryzacja i filtrowanie szablonów
 ├── store/
 │   ├── useResumeStore.ts       # Główny magazyn stanu Zustand z persist i historią (Undo/Redo)
@@ -107,7 +105,7 @@ src/
 │   │   ├── SelectedElementEditor.tsx # Kontekstowy edytor wybranego na podglądzie elementu
 │   │   ├── DataEditor.tsx      # Formularze edycji sekcji i danych osobowych
 │   │   ├── ThemeEditor.tsx     # Konfiguracja kolorów, typografii, geometrii i układu
-│   │   ├── TemplateManager.tsx # Przeglądarka 100 szablonów i zarządzanie własnymi motywami
+│   │   ├── TemplateManager.tsx # Przeglądarka szablonów i zarządzanie własnymi motywami
 │   │   ├── PhotoEditor.tsx     # Kadrowanie, powiększanie i dopasowanie zdjęcia
 │   │   └── SectionList.tsx     # Zarządzanie sekcjami i przeciąganie dnd-kit
 │   └── preview/

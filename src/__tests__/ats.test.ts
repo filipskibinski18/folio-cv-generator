@@ -7,18 +7,16 @@ import JSZip from 'jszip';
 
 describe('Optymalizator ATS (Applicant Tracking System)', () => {
   it('kolekcja zawiera także proste presety ze zdjęciem i warianty z ikonami', () => {
-    expect(presets).toHaveLength(115);
-    // All 12 presets must place the photo on the left or in the left sidebar
-    for (const preset of presets.slice(0, 12)) {
-      expect(['sidebar', 'left', 'top-left']).toContain(preset.theme.photo.position);
-      expect(preset.theme.photo.size).toBeGreaterThanOrEqual(28);
+    expect(presets).toHaveLength(31);
+    // Every curated design is composed around a visible, legible portrait.
+    for (const preset of presets) {
+      expect(preset.theme.photo.size).toBeGreaterThanOrEqual(24);
       expect(preset.theme.photo.isVisible).toBe(true);
     }
     expect(presets.every(p => p.theme.photo.isVisible)).toBe(true);
     expect(presets.some(p => p.theme.icons.style !== 'none')).toBe(true);
-    // Verify several templates feature large photos (>= 42mm)
-    const largePhotos = presets.filter(p => p.theme.photo.size >= 42);
-    expect(largePhotos.length).toBeGreaterThanOrEqual(6);
+    // Portraits vary in shape rather than being one repeated circle.
+    expect(new Set(presets.map(p => p.theme.photo.shape)).size).toBeGreaterThanOrEqual(4);
   });
 
   it('generuje dokument DOCX w trybie ATS bez tabel i bez rysunków graficznych', async () => {

@@ -31,7 +31,7 @@ try {
   const long = structuredClone(sampleResume);
   long.experience = Array.from({ length: 12 }, (_, i) => ({ ...structuredClone(sampleResume.experience[0]), id: `exp-${i}`, company: `Zespół produktowy ${i + 1}`, bullets: [{ id: `bullet-${i}`, text: `Realizacja projektu ${i + 1}. ${'Projektowanie dostępnych rozwiązań i analiza wyników. '.repeat(5)}`, children: [{ id: `child-${i}`, text: `Wynik: poprawa konwersji o ${i + 10}%.`, children: [] }] }] }));
   long.languages = Array.from({ length: 18 }, (_, i) => ({ id: `lang-${i}`, name: `Język ${i + 1}`, level: 'C1 · zaawansowany' }));
-  const jobs = [...presets.map(preset => ({ name: preset.id, data: photoData, theme: preset.theme })), ...['modern', 'creative', 'blueprint', 'nordic'].map(id => ({ name: `${id}-photo`, data: photoData, theme: presets.find(preset => preset.id === id).theme })), { name: 'stress', data: long, theme: presets[0].theme }];
+  const jobs = [...presets.map(preset => ({ name: preset.id, data: photoData, theme: preset.theme })), ...['modern', 'aurora', 'blueprint', 'monolith'].map(id => ({ name: `${id}-photo`, data: photoData, theme: presets.find(preset => preset.id === id).theme })), { name: 'stress', data: long, theme: presets[0].theme }];
   for (const job of jobs) {
     const { output: buffer } = await renderResume(job.data, job.theme, renderToBuffer);
     await writeFile(resolve(output, `${job.name}.pdf`), buffer);

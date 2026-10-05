@@ -1,7 +1,5 @@
-import type { ResumeTemplate, ResumeTheme, SectionId } from '../types/resume';
+import type { ResumeTemplate, ResumeTheme, SectionId, TemplateCategory } from '../types/resume';
 import { sectionIds, sectionLabels } from '../types/resume';
-import { createDesignPresets } from './designPresets';
-import { createSignaturePresets } from './signaturePresets';
 
 const sidebarSections: SectionId[] = ['skills', 'languages', 'certificates', 'links', 'interests'];
 const base: ResumeTheme = {
@@ -16,110 +14,270 @@ const base: ResumeTheme = {
   layout: 'sidebar-left', sidebarWidth: 32, skillStyle: 'text',
   sections: sectionIds.map(id => ({ id, icon: 'auto', title: sectionLabels[id], isVisible: true, column: sidebarSections.includes(id) ? 'sidebar' : 'main' })),
 };
-const template = (id: string, name: string, description: string, theme: ResumeTheme): ResumeTemplate => ({ id, name, description, theme, builtIn: true, createdAt: '2026-01-01', updatedAt: '2026-01-01' });
+
+type Patch = Omit<Partial<ResumeTheme>, 'design' | 'colors' | 'typography' | 'geometry' | 'photo' | 'icons'> & {
+  design?: Partial<ResumeTheme['design']>; colors?: Partial<ResumeTheme['colors']>; icons?: Partial<ResumeTheme['icons']>;
+  typography?: Partial<ResumeTheme['typography']>; geometry?: Partial<ResumeTheme['geometry']>; photo?: Partial<ResumeTheme['photo']>;
+};
+// Shared typographic rhythm for the whole collection, so every design starts
+// from the same well-fitted page and differs in composition, not in spacing noise.
+const make = (id: string, name: string, description: string, categories: TemplateCategory[], patch: Patch): ResumeTemplate => ({
+  id, name, description, categories, builtIn: true, createdAt: '2026-10-05', updatedAt: '2026-10-05',
+  theme: {
+    ...structuredClone(base), ...patch,
+    icons: { ...base.icons, ...patch.icons },
+    design: { ...base.design, contactIcons: true, continuationGap: 18, sidebarPadding: 14, ...patch.design },
+    colors: { ...base.colors, ...patch.colors },
+    typography: { ...base.typography, baseSize: 8.7, headingSize: 10, nameSize: 30, lineHeight: 1.34, ...patch.typography },
+    geometry: { ...base.geometry, margins: { top: 12, right: 15, bottom: 12, left: 15 }, sectionGap: 8, blockGap: 5, radius: 3, columnGap: 20, ...patch.geometry },
+    photo: { ...base.photo, borderWidth: 0, ...patch.photo },
+  },
+});
 
 export const presets: ResumeTemplate[] = [
-  template('modern', 'Modern Navy', 'Głęboki granat z dużym, okrągłym zdjęciem w lewym górnym rogu.', {
-    ...base,
-    photo: { ...base.photo, shape: 'circle', size: 44, position: 'sidebar', borderWidth: 2.5, borderColor: '#ffffff' },
-    colors: { accent: '#1e3a5f', background: '#ffffff', text: '#1e293b', muted: '#64748b', separator: '#dbeafe', sidebar: '#172e4d' },
-    geometry: { ...base.geometry, sectionGap: 6.5, blockGap: 3.5, margins: { top: 13, right: 15, bottom: 13, left: 15 } },
+  // — Minimalistyczne —
+  make('prime', 'Prime', 'Wyśrodkowana, oszczędna kompozycja z numeracją sekcji. Minimalizm bez nudy.', ['signature', 'minimal'], {
+    layout: 'single', headerStyle: 'centered', sectionStyle: 'numbered', skillStyle: 'inline',
+    design: { nameStyle: 'split', contactIcons: false, entryStyle: 'aligned' },
+    colors: { accent: '#1f2937', text: '#1f2937', muted: '#6b7280', separator: '#e5e7eb', sidebar: '#f3f4f6' },
+    photo: { position: 'center', shape: 'circle', size: 24 },
+    geometry: { sectionGap: 10, margins: { top: 13, right: 19, bottom: 12, left: 19 } },
   }),
-  template('executive', 'Executive Serif', 'Ponadczasowa elegancja z tradycyjnym, szeryfowym nagłówkiem.', {
-    ...base, layout: 'single', headerStyle: 'centered', sectionStyle: 'underline',
-    typography: { ...base.typography, fontFamily: 'Lora', headingFont: 'Lora', baseSize: 9.2, nameSize: 29 },
-    photo: { ...base.photo, shape: 'square', position: 'left', size: 32, borderWidth: 1, borderColor: '#cbd5e1' },
-    colors: { ...base.colors, accent: '#293b57', text: '#1e293b', muted: '#64748b', separator: '#cbd5e1' },
-    geometry: { ...base.geometry, sectionGap: 11, margins: { top: 16, right: 19, bottom: 16, left: 19 } },
+  make('pure', 'Czysty', 'Klasyczny wiersz „stanowisko — daty”, zwarte umiejętności i nic zbędnego. Bezpieczny wybór pod ATS.', ['minimal'], {
+    layout: 'single', headerStyle: 'accent', sectionStyle: 'underline', skillStyle: 'inline',
+    design: { entryStyle: 'aligned', contactIcons: false },
+    colors: { accent: '#111827', text: '#111827', muted: '#6b7280', separator: '#e5e7eb', sidebar: '#f3f4f6' },
+    photo: { position: 'right', shape: 'rounded', size: 25 },
+    geometry: { sectionGap: 9 },
   }),
-  template('creative', 'Charcoal Studio', 'Mocna grafitowa kolumna boczna i wysokie pionowe zdjęcie 3:4.', {
-    ...base,
-    sidebarWidth: 32,
-    photo: { ...base.photo, shape: 'portrait-rounded', size: 46, position: 'sidebar', borderWidth: 0 },
-    colors: { accent: '#1e2024', background: '#ffffff', text: '#1e2024', muted: '#71717a', separator: '#e4e4e7', sidebar: '#18191c' },
-    geometry: { ...base.geometry, sectionGap: 6.5, blockGap: 3.5 },
+  make('graphite-line', 'Linia', 'Kolumna oddzielona tylko włosową linią. Techniczna precyzja, paski poziomów i oś czasu.', ['minimal', 'technical'], {
+    layout: 'sidebar-left', sidebarWidth: 30, sectionStyle: 'bar', skillStyle: 'levels',
+    design: { sidebarStyle: 'line', entryStyle: 'timeline', skillMeter: 'bars', contactPlacement: 'sidebar' },
+    colors: { accent: '#2563eb', text: '#0f172a', muted: '#64748b', separator: '#dbe2ea', sidebar: '#f1f5f9' },
+    typography: { fontFamily: 'Roboto', headingFont: 'Roboto' },
+    photo: { position: 'sidebar', shape: 'rounded', size: 30 },
   }),
-  template('warm-sand', 'Warm Sand & Taupe', 'Ciepły beż z piaskową kolumną i dużym zdjęciem w lewym rogu.', {
-    ...base,
-    sidebarWidth: 33,
-    typography: { ...base.typography, headingFont: 'Lora', baseSize: 9 },
-    photo: { ...base.photo, shape: 'circle', size: 46, position: 'sidebar', borderWidth: 2, borderColor: '#ffffff' },
-    colors: { accent: '#735c49', background: '#ffffff', text: '#342e29', muted: '#786e64', separator: '#e5ded5', sidebar: '#f5f0e8' },
-    geometry: { ...base.geometry, sectionGap: 7, blockGap: 4 },
+  make('helvetica', 'Raster', 'Szwajcarska siatka: czerwony akcent, tytuły w lewej kolumnie i dużo bieli.', ['minimal'], {
+    layout: 'single', headerStyle: 'accent', sectionStyle: 'side', skillStyle: 'inline',
+    design: { nameStyle: 'stacked', contactIcons: false, entryStyle: 'aligned' },
+    colors: { accent: '#e11d27', text: '#111111', muted: '#5f5f5f', separator: '#e5e5e5', sidebar: '#f5f5f5' },
+    typography: { nameSize: 34, tracking: -0.1 },
+    photo: { position: 'right', shape: 'square', size: 26 },
+    geometry: { sectionGap: 10, radius: 0 },
   }),
-  template('emerald', 'Emerald Corporate', 'Głęboka leśna zieleń, profesjonalna forma i kadr z zaokrąglonymi rogami.', {
-    ...base,
-    sidebarWidth: 31,
-    photo: { ...base.photo, shape: 'rounded', size: 43, position: 'sidebar', borderWidth: 1.5, borderColor: '#345e53' },
-    colors: { accent: '#18473b', background: '#ffffff', text: '#1c2e28', muted: '#5c736a', separator: '#d7e4df', sidebar: '#12362d' },
-    geometry: { ...base.geometry, sectionGap: 7, blockGap: 3.5, radius: 5 },
+  make('linea', 'Linea', 'Szeroki nagłówek i prawa kolumna oddzielona linią. Spokojna, czytelna typografia.', ['minimal'], {
+    layout: 'sidebar-right', sidebarWidth: 30, headerStyle: 'centered', sectionStyle: 'plain', skillStyle: 'inline',
+    design: { sidebarStyle: 'line', entryStyle: 'aligned' },
+    colors: { accent: '#3b5b6e', text: '#1d2b33', muted: '#667780', separator: '#dbe3e7', sidebar: '#eef3f5' },
+    typography: { fontFamily: 'SourceSans3', headingFont: 'SourceSans3', baseSize: 9.2, headingSize: 10.5 },
+    photo: { position: 'left', shape: 'circle', size: 25 },
   }),
-  template('nordic', 'Nordic Slate', 'Skandynawski chłód, stalowy błękit i wyrazisty pionowy portret.', {
-    ...base,
-    sidebarWidth: 32,
-    typography: { ...base.typography, fontFamily: 'Roboto', headingFont: 'Roboto' },
-    photo: { ...base.photo, shape: 'portrait-rounded', size: 45, position: 'sidebar', borderWidth: 0 },
-    colors: { accent: '#263d52', background: '#ffffff', text: '#1d2731', muted: '#5f6f7f', separator: '#dbe4eb', sidebar: '#1e3040' },
-    geometry: { ...base.geometry, sectionGap: 6.5, blockGap: 3.5 },
+
+  // — Klasyczne —
+  make('executive', 'Executive', 'Ponadczasowy szeryf, wyśrodkowany nagłówek i daty wyrównane do prawej.', ['classic'], {
+    layout: 'single', headerStyle: 'centered', sectionStyle: 'underline', skillStyle: 'inline',
+    design: { entryStyle: 'aligned', contactIcons: false },
+    colors: { accent: '#1e3a5f', text: '#1c2733', muted: '#5f6b78', separator: '#cfd8e2', sidebar: '#eef2f7' },
+    typography: { fontFamily: 'Lora', headingFont: 'Lora', baseSize: 8.9, nameSize: 30 },
+    photo: { position: 'left', shape: 'square', size: 24, borderWidth: 1, borderColor: 'separator' },
+    geometry: { sectionGap: 9, margins: { top: 13, right: 18, bottom: 12, left: 18 } },
   }),
-  template('minimalist', 'Minimalist Light', 'Jasne, czyste studio z subtelnym tłem i dużym kadrem portretowym.', {
-    ...base,
-    sidebarWidth: 31,
-    sectionStyle: 'plain',
-    photo: { ...base.photo, shape: 'portrait', size: 48, position: 'sidebar', borderWidth: 1, borderColor: '#e2e8f0' },
-    colors: { accent: '#0f172a', background: '#ffffff', text: '#1e293b', muted: '#64748b', separator: '#e2e8f0', sidebar: '#f8fafc' },
-    geometry: { ...base.geometry, lineWidth: 0, sectionGap: 7, blockGap: 4 },
+  make('cambridge', 'Cambridge', 'Ramka strony, bordowe akcenty i pionowy portret. Akademicka elegancja.', ['classic'], {
+    layout: 'single', headerStyle: 'accent', sectionStyle: 'rail', skillStyle: 'inline',
+    design: { decoration: 'frame', entryStyle: 'timeline', contactIcons: false },
+    colors: { accent: '#6b2737', background: '#fffdfa', text: '#2a1d1f', muted: '#76656a', separator: '#eadfdf', sidebar: '#f5ecec' },
+    typography: { fontFamily: 'Lora', headingFont: 'CormorantGaramond', nameSize: 34, headingSize: 12 },
+    photo: { position: 'right', shape: 'portrait', size: 24, borderWidth: 1, borderColor: 'accent' },
+    geometry: { margins: { top: 15, right: 18, bottom: 14, left: 18 } },
   }),
-  template('bordeaux', 'Bordeaux Chic', 'Luksusowe bordowe tony i eleganckie szeryfowe nagłówki.', {
-    ...base,
-    sidebarWidth: 32,
-    typography: { ...base.typography, headingFont: 'Lora' },
-    photo: { ...base.photo, shape: 'circle', size: 44, position: 'sidebar', borderWidth: 2, borderColor: '#ffffff' },
-    colors: { accent: '#4e1728', background: '#ffffff', text: '#2a161e', muted: '#765e66', separator: '#ebdce1', sidebar: '#3a101d' },
-    geometry: { ...base.geometry, sectionGap: 6.5, blockGap: 3.5 },
+  make('botanika', 'Botanika', 'Szałwiowa kolumna, szeryfowe nagłówki i pionowy portret jak z albumu.', ['classic'], {
+    layout: 'sidebar-left', sidebarWidth: 33, sectionStyle: 'bar',
+    design: { sidebarStyle: 'bleed', nameStyle: 'split', contactPlacement: 'sidebar', entryStyle: 'timeline' },
+    colors: { accent: '#3f6b4b', background: '#fffefa', text: '#1f2a21', muted: '#69766b', separator: '#dbe5d8', sidebar: '#e6eee2' },
+    typography: { fontFamily: 'SourceSans3', headingFont: 'CormorantGaramond', nameSize: 33, headingSize: 11.5, baseSize: 9 },
+    photo: { position: 'sidebar', shape: 'portrait-rounded', size: 32 },
   }),
-  template('classic-swiss', 'Classic Swiss', 'Stylowa typografia w duchu szwajcarskim z ceglastym akcentem.', {
-    ...base,
-    sidebarWidth: 30,
-    photo: { ...base.photo, shape: 'square', size: 38, position: 'sidebar', borderWidth: 0 },
-    colors: { accent: '#c2410c', background: '#ffffff', text: '#1c1917', muted: '#78716c', separator: '#fed7aa', sidebar: '#faf8f5' },
-    geometry: { ...base.geometry, sectionGap: 7, blockGap: 4, radius: 0 },
+  make('oxford', 'Oxford', 'Szeryfowa kolumna po lewej oddzielona linią, granat i uporządkowane daty.', ['classic'], {
+    layout: 'sidebar-left', sidebarWidth: 29, sectionStyle: 'underline', skillStyle: 'text',
+    design: { sidebarStyle: 'line', entryStyle: 'aligned', contactPlacement: 'sidebar', nameStyle: 'stacked' },
+    colors: { accent: '#24365a', background: '#ffffff', text: '#1b2230', muted: '#5f6878', separator: '#d8dde6', sidebar: '#eef1f6' },
+    typography: { fontFamily: 'Lora', headingFont: 'PlayfairDisplay', nameSize: 30, baseSize: 8.8 },
+    photo: { position: 'sidebar', shape: 'square', size: 28, borderWidth: 1, borderColor: 'separator' },
   }),
-  template('blueprint', 'Blueprint Horizon', 'Układ z poziomym banerem i zdjęciem po lewej stronie.', {
-    ...base, headerStyle: 'banner', sectionStyle: 'filled', layout: 'sidebar-right', sidebarWidth: 30,
-    typography: { ...base.typography, fontFamily: 'Roboto', headingFont: 'Roboto', nameSize: 28, baseSize: 8.5 },
-    colors: { accent: '#1e40af', background: '#ffffff', text: '#1e293b', muted: '#64748b', separator: '#dbeafe', sidebar: '#f0f7ff' },
-    photo: { ...base.photo, shape: 'rounded', size: 32, position: 'left', borderWidth: 0 },
-    geometry: { ...base.geometry, radius: 5, sectionGap: 7, columnGap: 18, margins: { top: 13, right: 15, bottom: 13, left: 15 } },
+
+  // — Biznesowe —
+  make('modern', 'Modern Navy', 'Granatowa kolumna do krawędzi strony, okrągłe zdjęcie i daty po prawej.', ['business'], {
+    layout: 'sidebar-left', sidebarWidth: 32, sectionStyle: 'underline',
+    design: { sidebarStyle: 'bleed', entryStyle: 'aligned', contactPlacement: 'sidebar' },
+    colors: { accent: '#1e3a5f', text: '#1e293b', muted: '#64748b', separator: '#dbe3ee', sidebar: '#172e4d' },
+    photo: { position: 'sidebar', shape: 'circle', size: 32, borderWidth: 2.5, borderColor: 'white' },
   }),
-  template('atelier', 'Atelier Grid', 'Dwukolumnowy układ siatki na ciepłym papierze z centralnym nagłówkiem.', {
-    ...base, layout: 'grid', headerStyle: 'centered', sectionStyle: 'filled', skillStyle: 'tags',
-    colors: { accent: '#855b2b', background: '#fffdf9', text: '#40362a', muted: '#7d7060', separator: '#e8dcce', sidebar: '#f7f2e8' },
-    typography: { ...base.typography, headingFont: 'Lora', nameSize: 29, baseSize: 8.5 },
-    photo: { ...base.photo, shape: 'rounded', size: 32, position: 'left', borderWidth: 1, borderColor: '#e8dcce' },
-    geometry: { ...base.geometry, radius: 5, columnGap: 14, sectionGap: 8, blockGap: 4 },
+  make('atlas-hero', 'Meridian', 'Granatowy nagłówek na całą szerokość i dwie kolumny rozdzielone linią.', ['business'], {
+    layout: 'sidebar-right', sidebarWidth: 31, headerStyle: 'hero', sectionStyle: 'numbered', skillStyle: 'tags',
+    design: { sidebarStyle: 'line', entryStyle: 'timeline' },
+    colors: { accent: '#1c2c4c', text: '#18202e', muted: '#646f82', separator: '#dde3ec', sidebar: '#eef2f8' },
+    typography: { headingFont: 'Montserrat', nameSize: 31 },
+    photo: { position: 'left', shape: 'circle', size: 28, borderWidth: 2, borderColor: 'white' },
   }),
-  template('midnight', 'Midnight Horizon', 'Wyrazisty ciemny fiolet i granat z nowoczesnym układem.', {
-    ...base, layout: 'single', headerStyle: 'banner', sectionStyle: 'underline', skillStyle: 'tags',
-    colors: { accent: '#4c3a6b', background: '#ffffff', text: '#2c2538', muted: '#766c84', separator: '#ded7e8', sidebar: '#f5f2f9' },
-    typography: { ...base.typography, headingFont: 'Lora', nameSize: 30 },
-    photo: { ...base.photo, shape: 'circle', size: 36, position: 'left', borderWidth: 2, borderColor: '#ffffff' },
-    geometry: { ...base.geometry, radius: 6, sectionGap: 9, lineWidth: 0.8, margins: { top: 14, right: 17, bottom: 14, left: 17 } },
+  make('monolith', 'Monolith', 'Czarny nagłówek na całą szerokość, numerowane sekcje i plakatowe nazwisko.', ['signature', 'business'], {
+    layout: 'single', headerStyle: 'hero', sectionStyle: 'numbered', skillStyle: 'inline',
+    design: { nameStyle: 'uppercase', contactIcons: false, entryStyle: 'aligned' },
+    colors: { accent: '#111111', text: '#161616', muted: '#6b6b6b', separator: '#dedede', sidebar: '#f2f2f2' },
+    typography: { headingFont: 'Oswald', nameSize: 40, headingSize: 11 },
+    photo: { position: 'right', shape: 'square', size: 28, borderWidth: 2, borderColor: 'white' },
+    geometry: { sectionGap: 9 },
   }),
-  template('editorial', 'Editorial Ink', 'Literackie nagłówki, dużo światła i klasyczne linie.', { ...base, layout: 'single', headerStyle: 'centered', sectionStyle: 'underline', icons: { style: 'none', size: 14 }, typography: { ...base.typography, fontFamily: 'SourceSans3', headingFont: 'PlayfairDisplay', headingSize: 10, nameSize: 30 }, colors: { ...base.colors, accent: '#292524', sidebar: '#f5f5f4', separator: '#f5f5f4' }, photo: { ...base.photo, isVisible: true, position: 'right', size: 32, borderWidth: 0 }, geometry: { ...base.geometry, sectionGap: 9, radius: 2 } }),
-  template('azure', 'Azure Icons', 'Niebieskie nagłówki z kwadratowymi ikonami.', { ...base, layout: 'single', headerStyle: 'accent', sectionStyle: 'underline', icons: { style: 'square', size: 14 }, typography: { ...base.typography, fontFamily: 'Inter', headingFont: 'Montserrat', headingSize: 10, nameSize: 30 }, colors: { ...base.colors, accent: '#2563eb', sidebar: '#eff6ff', separator: '#eff6ff' }, photo: { ...base.photo, isVisible: true, position: 'right', size: 32, borderWidth: 0 }, geometry: { ...base.geometry, sectionGap: 9, radius: 2 } }),
-  template('sage', 'Sage Notebook', 'Szałwiowa belka i delikatne ikony konturowe.', { ...base, layout: 'sidebar-right', headerStyle: 'centered', sectionStyle: 'plain', icons: { style: 'outline', size: 14 }, typography: { ...base.typography, fontFamily: 'SourceSans3', headingFont: 'Lora', headingSize: 10, nameSize: 30 }, colors: { ...base.colors, accent: '#426b56', sidebar: '#eef4ef', separator: '#eef4ef' }, photo: { ...base.photo, isVisible: true, position: 'left', size: 32, borderWidth: 0 }, geometry: { ...base.geometry, sectionGap: 9, radius: 2 } }),
-  template('cobalt', 'Cobalt Portfolio', 'Wyrazisty baner, okrągłe plakietki i geometryczna typografia.', { ...base, layout: 'sidebar-left', headerStyle: 'banner', sectionStyle: 'plain', icons: { style: 'circle', size: 14 }, typography: { ...base.typography, fontFamily: 'SourceSans3', headingFont: 'Montserrat', headingSize: 10, nameSize: 30 }, colors: { ...base.colors, accent: '#2445bd', sidebar: '#edf1ff', separator: '#edf1ff' }, photo: { ...base.photo, isVisible: true, position: 'left', size: 32, borderWidth: 0 }, geometry: { ...base.geometry, sectionGap: 9, radius: 2 } }),
-  template('rose', 'Rose Atelier', 'Pudrowy róż i kontrast szeryfowych nagłówków.', { ...base, layout: 'grid', headerStyle: 'centered', sectionStyle: 'filled', icons: { style: 'outline', size: 14 }, typography: { ...base.typography, fontFamily: 'Inter', headingFont: 'PlayfairDisplay', headingSize: 10, nameSize: 30 }, colors: { ...base.colors, accent: '#96566d', sidebar: '#fcf0f4', separator: '#fcf0f4' }, photo: { ...base.photo, isVisible: true, position: 'right', size: 32, borderWidth: 0 }, geometry: { ...base.geometry, sectionGap: 9, radius: 2 } }),
-  template('copper', 'Copper Journal', 'Miedziane detale, lewa kolumna i spokojna typografia.', { ...base, layout: 'sidebar-left', headerStyle: 'accent', sectionStyle: 'underline', icons: { style: 'square', size: 14 }, typography: { ...base.typography, fontFamily: 'SourceSans3', headingFont: 'PlayfairDisplay', headingSize: 10, nameSize: 30 }, colors: { ...base.colors, accent: '#995b34', sidebar: '#f8f0e7', separator: '#f8f0e7' }, photo: { ...base.photo, isVisible: true, position: 'sidebar', size: 32, borderWidth: 0 }, geometry: { ...base.geometry, sectionGap: 9, radius: 2 } }),
-  template('graphite', 'Graphite Technical', 'Techniczny układ z portretem i grafitowymi symbolami.', { ...base, layout: 'single', headerStyle: 'accent', sectionStyle: 'plain', icons: { style: 'outline', size: 14 }, typography: { ...base.typography, fontFamily: 'Roboto', headingFont: 'Montserrat', headingSize: 10, nameSize: 30 }, colors: { ...base.colors, accent: '#374151', sidebar: '#f3f4f6', separator: '#f3f4f6' }, photo: { ...base.photo, isVisible: true, position: 'right', size: 32, borderWidth: 0 }, geometry: { ...base.geometry, sectionGap: 9, radius: 2 } }),
-  template('violet', 'Violet Orbit', 'Fioletowy baner i ikony w okrągłych plakietkach.', { ...base, layout: 'sidebar-right', headerStyle: 'banner', sectionStyle: 'filled', icons: { style: 'circle', size: 14 }, typography: { ...base.typography, fontFamily: 'Inter', headingFont: 'Montserrat', headingSize: 10, nameSize: 30 }, colors: { ...base.colors, accent: '#6d4db5', sidebar: '#f5f0ff', separator: '#f5f0ff' }, photo: { ...base.photo, isVisible: true, position: 'left', size: 32, borderWidth: 0 }, geometry: { ...base.geometry, sectionGap: 9, radius: 2 } }),
-  template('ivory', 'Ivory Signature', 'Jasna kolumna, elegancki portret i redakcyjne nagłówki.', { ...base, layout: 'sidebar-left', headerStyle: 'accent', sectionStyle: 'plain', icons: { style: 'none', size: 14 }, typography: { ...base.typography, fontFamily: 'Lora', headingFont: 'PlayfairDisplay', headingSize: 10, nameSize: 30 }, colors: { ...base.colors, accent: '#73624a', sidebar: '#f8f4ed', separator: '#f8f4ed' }, photo: { ...base.photo, isVisible: true, position: 'sidebar', size: 32, borderWidth: 0 }, geometry: { ...base.geometry, sectionGap: 9, radius: 2 } }),
-  template('teal', 'Teal Signal', 'Turkusowe symbole i przejrzysta siatka.', { ...base, layout: 'grid', headerStyle: 'accent', sectionStyle: 'underline', icons: { style: 'square', size: 14 }, typography: { ...base.typography, fontFamily: 'SourceSans3', headingFont: 'Montserrat', headingSize: 10, nameSize: 30 }, colors: { ...base.colors, accent: '#0f766e', sidebar: '#eff9f7', separator: '#eff9f7' }, photo: { ...base.photo, isVisible: true, position: 'right', size: 32, borderWidth: 0 }, geometry: { ...base.geometry, sectionGap: 9, radius: 2 } }),
-  template('mono', 'Mono Essential', 'Proste jednokolumnowe CV z czytelną typografią.', { ...base, layout: 'single', headerStyle: 'centered', sectionStyle: 'underline', icons: { style: 'none', size: 14 }, typography: { ...base.typography, fontFamily: 'SourceSans3', headingFont: 'SourceSans3', headingSize: 10, nameSize: 30 }, colors: { ...base.colors, accent: '#18181b', sidebar: '#fafafa', separator: '#fafafa' }, photo: { ...base.photo, isVisible: true, position: 'right', size: 32, borderWidth: 0 }, geometry: { ...base.geometry, sectionGap: 9, radius: 2 } }),
-  template('ochre', 'Ochre Studio', 'Musztardowe detale i subtelne ikony w prawej kolumnie.', { ...base, layout: 'sidebar-right', headerStyle: 'accent', sectionStyle: 'filled', icons: { style: 'outline', size: 14 }, typography: { ...base.typography, fontFamily: 'Inter', headingFont: 'Lora', headingSize: 10, nameSize: 30 }, colors: { ...base.colors, accent: '#956f16', sidebar: '#fbf6e6', separator: '#fbf6e6' }, photo: { ...base.photo, isVisible: true, position: 'left', size: 32, borderWidth: 0 }, geometry: { ...base.geometry, sectionGap: 9, radius: 2 } }),
-  ...createDesignPresets(base),
-  // Shown first in the gallery through its category; appended so existing indices stay stable.
-  ...createSignaturePresets(base),
+  make('boardroom', 'Boardroom', 'Grafitowa kolumna po prawej, złote detale i szeryfowe nazwisko. Dla kadry zarządzającej.', ['business'], {
+    layout: 'sidebar-right', sidebarWidth: 31, sectionStyle: 'bar',
+    design: { sidebarStyle: 'bleed', entryStyle: 'aligned', contactPlacement: 'sidebar', nameStyle: 'stacked' },
+    colors: { accent: '#9a7440', text: '#1d232b', muted: '#626b76', separator: '#e4ddd2', sidebar: '#1f2a37' },
+    typography: { fontFamily: 'SourceSans3', headingFont: 'PlayfairDisplay', nameSize: 32, baseSize: 9 },
+    photo: { position: 'sidebar', shape: 'portrait', size: 31, borderWidth: 1, borderColor: 'accent' },
+  }),
+  make('consult', 'Konsultant', 'Morski baner, tytuły sekcji na kolorowym tle i przejrzysta prawa kolumna.', ['business'], {
+    layout: 'sidebar-right', sidebarWidth: 30, headerStyle: 'banner', sectionStyle: 'filled', skillStyle: 'tags',
+    design: { sidebarStyle: 'line', entryStyle: 'aligned' },
+    icons: { style: 'circle', size: 14 },
+    colors: { accent: '#0f4c5c', text: '#14262b', muted: '#5c7076', separator: '#d6e4e7', sidebar: '#e6f0f2' },
+    typography: { headingFont: 'Montserrat', nameSize: 28 },
+    photo: { position: 'left', shape: 'rounded', size: 26, borderWidth: 2, borderColor: 'white' },
+    geometry: { radius: 6 },
+  }),
+
+  // — Kreatywne —
+  make('aurora', 'Aurora', 'Granatowa kolumna od krawędzi do krawędzi, dwukolorowe nazwisko i oś czasu z węzłami.', ['signature', 'creative'], {
+    layout: 'sidebar-left', sidebarWidth: 33, sectionStyle: 'bar', skillStyle: 'tags',
+    design: { sidebarStyle: 'bleed', nameStyle: 'split', entryStyle: 'timeline', contactPlacement: 'sidebar' },
+    colors: { accent: '#e2553f', text: '#18202e', muted: '#677185', separator: '#e6e9ef', sidebar: '#16233b' },
+    typography: { headingFont: 'Montserrat', nameSize: 30 },
+    photo: { position: 'sidebar', shape: 'circle', size: 32, borderWidth: 3, borderColor: '#e2553f' },
+  }),
+  make('terracotta-hero', 'Terakota', 'Ciepły nagłówek na całą szerokość, szeryfowe nazwisko w dwóch tonach i okrągły portret.', ['signature', 'creative'], {
+    layout: 'single', headerStyle: 'hero', sectionStyle: 'numbered', skillStyle: 'inline',
+    design: { nameStyle: 'split', entryStyle: 'aligned' },
+    colors: { accent: '#a8492a', background: '#fffaf6', text: '#2b1d17', muted: '#7a6458', separator: '#ecdcd2', sidebar: '#f6e9e1' },
+    typography: { fontFamily: 'SourceSans3', headingFont: 'Lora', nameSize: 32, baseSize: 9 },
+    photo: { position: 'left', shape: 'circle', size: 30, borderWidth: 2.5, borderColor: 'white' },
+  }),
+  make('cobalt-hero', 'Kobalt', 'Intensywny kobaltowy nagłówek, dwie kolumny i wyraźne tagi.', ['creative'], {
+    layout: 'sidebar-left', sidebarWidth: 31, headerStyle: 'hero', sectionStyle: 'bar', skillStyle: 'tags',
+    design: { sidebarStyle: 'line', nameStyle: 'uppercase', entryStyle: 'aligned' },
+    colors: { accent: '#1d4ed8', text: '#0f172a', muted: '#5b6b85', separator: '#dbe4f5', sidebar: '#eaf0ff' },
+    typography: { headingFont: 'Oswald', nameSize: 32, headingSize: 10.5 },
+    photo: { position: 'right', shape: 'circle', size: 26, borderWidth: 2.5, borderColor: 'white' },
+  }),
+  make('sorbet', 'Sorbet', 'Jedna kolumna z miękkimi plamami koloru, dwukolorowym nazwiskiem i tagami.', ['creative'], {
+    layout: 'single', headerStyle: 'accent', sectionStyle: 'bar', skillStyle: 'tags',
+    design: { decoration: 'blob', nameStyle: 'split', entryStyle: 'aligned' },
+    colors: { accent: '#c2410c', text: '#2a1a12', muted: '#80675a', separator: '#f6dccd', sidebar: '#fdebe1' },
+    typography: { headingFont: 'Montserrat', nameSize: 32 },
+    photo: { position: 'right', shape: 'circle', size: 30, borderWidth: 3, borderColor: 'accent' },
+    geometry: { radius: 8 },
+  }),
+  make('lagoon-bleed', 'Laguna', 'Jasna turkusowa kolumna na całą wysokość, numerowane sekcje i miękkie plamy koloru.', ['creative'], {
+    layout: 'sidebar-right', sidebarWidth: 32, sectionStyle: 'numbered', skillStyle: 'tags',
+    design: { sidebarStyle: 'bleed', decoration: 'blob', contactPlacement: 'sidebar' },
+    colors: { accent: '#0f766e', text: '#12302c', muted: '#5f7a76', separator: '#cfe5e1', sidebar: '#e7f3f1' },
+    typography: { headingFont: 'Montserrat', nameSize: 31 },
+    photo: { position: 'sidebar', shape: 'circle', size: 32, borderWidth: 3, borderColor: 'white' },
+  }),
+  make('kafle', 'Kafle', 'Dwie równe kolumny, wpisy na lawendowych kartach i świeża, geometryczna typografia.', ['creative'], {
+    layout: 'grid', headerStyle: 'accent', sectionStyle: 'bar', skillStyle: 'tags',
+    design: { entryStyle: 'cards', nameStyle: 'split', sidebarStyle: 'line' },
+    colors: { accent: '#6d28d9', text: '#1e1530', muted: '#6b6280', separator: '#e4dcf5', sidebar: '#f3effc' },
+    typography: { headingFont: 'Montserrat', nameSize: 30 },
+    photo: { position: 'right', shape: 'rounded', size: 26 },
+    geometry: { radius: 8, columnGap: 16 },
+  }),
+
+  // — Eleganckie —
+  make('broadsheet', 'Broadsheet', 'Redakcyjny układ z tytułami sekcji na marginesie, jak w dobrym magazynie.', ['signature', 'editorial', 'classic'], {
+    layout: 'single', headerStyle: 'accent', sectionStyle: 'side', skillStyle: 'inline',
+    design: { nameStyle: 'split', decoration: 'rule', contactIcons: false, entryStyle: 'aligned' },
+    colors: { accent: '#9f1d20', background: '#fffdf9', text: '#1f1a17', muted: '#6f655d', separator: '#e7dfd5', sidebar: '#f4ede4' },
+    typography: { fontFamily: 'SourceSans3', headingFont: 'PlayfairDisplay', nameSize: 36, baseSize: 9.1 },
+    photo: { position: 'right', shape: 'portrait', size: 26 },
+    geometry: { sectionGap: 10, margins: { top: 13, right: 17, bottom: 12, left: 17 } },
+  }),
+  make('noir-gold', 'Noir', 'Ciemny papier, złoty akcent i elegancki szeryf. Do wysyłki cyfrowej.', ['signature', 'editorial'], {
+    layout: 'sidebar-left', sidebarWidth: 32, sectionStyle: 'bar', skillStyle: 'inline',
+    design: { sidebarStyle: 'bleed', nameStyle: 'split', contactPlacement: 'sidebar', entryStyle: 'aligned' },
+    colors: { accent: '#d4b26a', background: '#161514', text: '#f1ece2', muted: '#a59e90', separator: '#36322c', sidebar: '#1f1d1b' },
+    typography: { fontFamily: 'SourceSans3', headingFont: 'CormorantGaramond', nameSize: 33, headingSize: 11, baseSize: 9 },
+    photo: { position: 'sidebar', shape: 'portrait', size: 32, borderWidth: 1, borderColor: 'accent' },
+  }),
+  make('magazine', 'Magazyn', 'Dwie równe kolumny, wielkie szeryfowe nazwisko i linia akcentu jak w nagłówku gazety.', ['editorial'], {
+    layout: 'grid', headerStyle: 'accent', sectionStyle: 'underline', skillStyle: 'inline',
+    design: { decoration: 'rule', nameStyle: 'split', entryStyle: 'plain', contactIcons: false, sidebarStyle: 'line' },
+    colors: { accent: '#1f4d3a', background: '#fffefb', text: '#1b2420', muted: '#66716b', separator: '#dfe5e1', sidebar: '#eef3f0' },
+    typography: { fontFamily: 'SourceSans3', headingFont: 'PlayfairDisplay', nameSize: 36, baseSize: 9 },
+    photo: { position: 'right', shape: 'portrait', size: 25 },
+    geometry: { columnGap: 18 },
+  }),
+  make('rose-letter', 'List', 'Odręczne nazwisko, pudrowa kolumna do krawędzi i szeryfowe nagłówki. Osobiście, ale z klasą.', ['editorial', 'artistic'], {
+    layout: 'sidebar-right', sidebarWidth: 32, sectionStyle: 'bar', skillStyle: 'inline',
+    design: { sidebarStyle: 'bleed', contactPlacement: 'sidebar', entryStyle: 'aligned' },
+    colors: { accent: '#8c4b53', background: '#fffdfc', text: '#2b1e20', muted: '#7a686a', separator: '#efdfdc', sidebar: '#f6e7e4' },
+    typography: { fontFamily: 'Lora', headingFont: 'Caveat', nameSize: 42, headingSize: 15, baseSize: 8.8 },
+    photo: { position: 'sidebar', shape: 'portrait-rounded', size: 31, borderWidth: 2, borderColor: 'white' },
+  }),
+
+  // — Techniczne —
+  make('commit', 'Commit', 'Dla programistów: tytuły na marginesie, tagi technologii i diagonalny akcent.', ['technical'], {
+    layout: 'single', headerStyle: 'accent', sectionStyle: 'side', skillStyle: 'tags',
+    design: { decoration: 'diagonal', entryStyle: 'timeline' },
+    colors: { accent: '#059669', text: '#0f1d17', muted: '#5d6f67', separator: '#dcebe4', sidebar: '#ecf7f2' },
+    typography: { fontFamily: 'Roboto', headingFont: 'Roboto', nameSize: 32 },
+    photo: { position: 'right', shape: 'rounded', size: 26 },
+    geometry: { sectionGap: 9 },
+  }),
+  make('indigo-bleed', 'Indygo', 'Głęboka indygo kolumna po prawej, poziomy umiejętności w kropkach i numerowane sekcje.', ['technical'], {
+    layout: 'sidebar-right', sidebarWidth: 31, sectionStyle: 'numbered', skillStyle: 'levels',
+    design: { sidebarStyle: 'bleed', skillMeter: 'dots', contactPlacement: 'sidebar', entryStyle: 'aligned' },
+    colors: { accent: '#4f46e5', text: '#1b1a33', muted: '#686784', separator: '#e3e2f3', sidebar: '#24215c' },
+    typography: { fontFamily: 'Roboto', headingFont: 'Montserrat', nameSize: 30 },
+    photo: { position: 'sidebar', shape: 'rounded', size: 31, borderWidth: 2, borderColor: 'white' },
+  }),
+  make('terminal-night', 'Terminal', 'Ciemny dokument z miętowym akcentem, tytułami na marginesie i osią czasu. Do wysyłki cyfrowej.', ['technical'], {
+    layout: 'single', headerStyle: 'accent', sectionStyle: 'side', skillStyle: 'tags',
+    design: { nameStyle: 'uppercase', entryStyle: 'timeline', decoration: 'dots' },
+    colors: { accent: '#5eead4', background: '#0f1d22', text: '#e6f4f1', muted: '#9bb5b0', separator: '#26404a', sidebar: '#16303a' },
+    typography: { fontFamily: 'Roboto', headingFont: 'Oswald', nameSize: 34, headingSize: 11 },
+    photo: { position: 'right', shape: 'square', size: 26, borderWidth: 1, borderColor: 'accent' },
+  }),
+  make('blueprint', 'Blueprint', 'Niebieski baner, kolumna z tagami po lewej i przejrzyste daty po prawej.', ['technical'], {
+    layout: 'sidebar-left', sidebarWidth: 30, headerStyle: 'banner', sectionStyle: 'rail', skillStyle: 'tags',
+    design: { sidebarStyle: 'line', entryStyle: 'aligned' },
+    icons: { style: 'outline', size: 13 },
+    colors: { accent: '#1e40af', text: '#0f1b33', muted: '#5b6b86', separator: '#d9e3f5', sidebar: '#eef3fc' },
+    typography: { fontFamily: 'Roboto', headingFont: 'Roboto', nameSize: 29 },
+    photo: { position: 'right', shape: 'rounded', size: 26, borderWidth: 2, borderColor: 'white' },
+    geometry: { radius: 6 },
+  }),
+
+  // — Artystyczne —
+  make('sketchbook', 'Szkicownik', 'Ciepły papier, odręczne nagłówki, ramka i kropkowe poziomy umiejętności.', ['artistic'], {
+    layout: 'grid', headerStyle: 'accent', sectionStyle: 'plain', skillStyle: 'levels',
+    design: { decoration: 'frame', skillMeter: 'dots', nameStyle: 'natural' },
+    colors: { accent: '#9a4f3c', background: '#fff9ea', text: '#33261f', muted: '#7d6a5c', separator: '#ecdcc0', sidebar: '#f5ead0' },
+    typography: { fontFamily: 'SourceSans3', headingFont: 'Caveat', nameSize: 42, headingSize: 16, baseSize: 9 },
+    photo: { position: 'right', shape: 'square', size: 26, borderWidth: 2, borderColor: 'white' },
+    geometry: { margins: { top: 15, right: 17, bottom: 14, left: 17 }, columnGap: 18 },
+  }),
+  make('bauhaus', 'Bauhaus', 'Czysta geometria, mocna czerwień, numeracja i plakatowe wersaliki.', ['artistic'], {
+    layout: 'single', headerStyle: 'accent', sectionStyle: 'numbered', skillStyle: 'tags',
+    design: { decoration: 'corner', nameStyle: 'uppercase', entryStyle: 'aligned' },
+    colors: { accent: '#d62828', background: '#fffcf5', text: '#1d1b18', muted: '#6d675d', separator: '#ebe4d6', sidebar: '#f6efdf' },
+    typography: { headingFont: 'Montserrat', nameSize: 30 },
+    photo: { position: 'left', shape: 'circle', size: 28, borderWidth: 3, borderColor: 'accent' },
+    geometry: { radius: 0 },
+  }),
+  make('midnight-gallery', 'Galeria nocą', 'Nocny błękit i miedź, łuki w tle i szeryfowe nazwisko w dwóch tonach. Do wysyłki cyfrowej.', ['artistic'], {
+    layout: 'sidebar-right', sidebarWidth: 32, sectionStyle: 'bar', skillStyle: 'inline',
+    design: { sidebarStyle: 'bleed', decoration: 'arch', nameStyle: 'split', contactPlacement: 'sidebar', entryStyle: 'timeline' },
+    colors: { accent: '#e1b992', background: '#1b2b3f', text: '#fcf4e9', muted: '#b6c2d0', separator: '#3b4f66', sidebar: '#22364d' },
+    typography: { fontFamily: 'SourceSans3', headingFont: 'CormorantGaramond', nameSize: 34, headingSize: 11.5, baseSize: 9 },
+    photo: { position: 'sidebar', shape: 'portrait-rounded', size: 31, borderWidth: 2, borderColor: 'accent' },
+  }),
 ];
 export const defaultTheme = structuredClone(base);

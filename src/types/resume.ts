@@ -82,7 +82,7 @@ export const resumeThemeSchema = z.preprocess(withMissingSections, z.object({
   language: z.enum(['pl', 'en']).default('pl'),
   keepSectionsTogether: z.boolean().default(true),
   design: z.object({
-    entryStyle: z.enum(['plain', 'timeline', 'table', 'cards']),
+    entryStyle: z.enum(['plain', 'timeline', 'table', 'cards', 'aligned']),
     decoration: z.enum(['none', 'rule', 'corner', 'frame', 'orbit', 'dots', 'arch', 'ribbon', 'contour', 'mosaic', 'blob', 'diagonal']),
     nameStyle: z.enum(['natural', 'uppercase', 'stacked', 'split']),
     contactPlacement: z.enum(['header', 'sidebar']),
@@ -108,7 +108,7 @@ export const resumeThemeSchema = z.preprocess(withMissingSections, z.object({
   colors: z.object({ accent: color, background: color, text: color, muted: color, separator: color, sidebar: color }),
   geometry: z.object({ margins: z.object({ top: z.number().min(8).max(30), right: z.number().min(8).max(30), bottom: z.number().min(8).max(30), left: z.number().min(8).max(30) }), sectionPadding: z.number().min(0).max(12), sectionGap: z.number().min(6).max(28), blockGap: z.number().min(3).max(18), radius: z.number().min(0).max(12), lineWidth: z.number().min(0).max(3), columnGap: z.number().min(8).max(30) }),
   layout: z.enum(layoutNames), sidebarWidth: z.number().min(25).max(45),
-  skillStyle: z.enum(['text', 'tags', 'levels']),
+  skillStyle: z.enum(['text', 'tags', 'levels', 'inline']),
   sections: z.array(z.object({ id: z.enum(sectionIds), title: short, icon: z.enum(['auto', 'none', 'user', 'briefcase', 'book', 'code', 'award', 'globe', 'link', 'shield', 'heart']).default('auto'), isVisible: z.boolean(), column: z.enum(['main', 'sidebar']) })).length(sectionIds.length).refine(items => new Set(items.map(item => item.id)).size === sectionIds.length, 'Sekcje muszą mieć unikalne identyfikatory.'),
 }));
 export type ResumeTheme = z.infer<typeof resumeThemeSchema>;

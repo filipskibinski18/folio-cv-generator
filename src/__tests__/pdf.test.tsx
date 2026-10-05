@@ -186,7 +186,7 @@ describe('Wektorowy PDF A4 i podział stron', () => {
   it('przenosi długi projekt na kolejne strony bez ucinania jego opisu', async () => {
     const data = structuredClone(sampleResume);
     data.projects[0].description = `Koncepcja aplikacji. ${'Projektowanie i wdrażanie dostępnych rozwiązań. '.repeat(150)} ENDOFLONGPROJECT`;
-    const result = await inspect(data, presets.find(preset => preset.id === 'midnight')!.theme);
+    const result = await inspect(data, presets.find(preset => preset.id === 'terracotta-hero')!.theme);
     expect(result.text).toContain('ENDOFLONGPROJECT'); expect(result.text).toContain('Careflow');
     expect(result.pages).toBeGreaterThan(2); expect(result.outOfBounds).toEqual([]);
     expect(result.pageTexts.find(text => text.includes('PROJEKTY'))).toContain('Careflow');
@@ -200,7 +200,7 @@ describe('Wektorowy PDF A4 i podział stron', () => {
     expect(result.text).not.toContain('UniwersytetSWPS');
   }, 30000);
   it('umieszcza końcową klauzulę na ostatniej stronie razem z treścią CV', async () => {
-    const result = await inspect(sampleResume, presets.find(preset => preset.id === 'rose')!.theme);
+    const result = await inspect(sampleResume, presets.find(preset => preset.id === 'magazine')!.theme);
     const last = result.pageTexts.at(-1)!;
     expect(last).toContain('Wyrażamzgodę');
     expect(last).toContain('Careflow');

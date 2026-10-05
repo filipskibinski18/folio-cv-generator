@@ -67,11 +67,21 @@ export function ResumeDocument({ data, theme: t, onRender, continuations = [], s
     const length = [item.name, item.role, item.description, item.url, ...item.technologies].join(' ').length;
     return length < width / (type.baseSize * 0.85) * 12;
   };
+  // Title left, dates right — the classic CV row. Narrow sidebars keep the stacked form.
+  const titleRow = (title: string, aside: string, isSide: boolean, size = type.baseSize + 1) => <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
+    <Text style={{ flex: 1, fontWeight: 700, fontSize: size, lineHeight: line(size), color: getTextColor(isSide) }}>{rich(title)}</Text>
+    {aside ? <Text style={{ flexShrink: 0, maxWidth: '42%', textAlign: 'right', fontSize: type.baseSize - 1, lineHeight: line(size), color: getTextColor(isSide, true) }}>{aside}</Text> : null}
+  </View>;
+  const subRow = (strong: string, rest: string, isSide: boolean) => strong || rest ? <Text style={{ lineHeight: line(), marginBottom: 4, color: getTextColor(isSide, true) }}>{strong ? <Text style={{ color: getAccentColor(isSide), fontWeight: 700 }}>{strong}</Text> : null}{strong && rest ? '  ·  ' : ''}{rest}</Text> : null;
   function sectionContent(id: SectionId, isSide = false): ReactNode {
     const sAccent = getAccentColor(isSide);
+    const aligned = d.entryStyle === 'aligned' && !isSide;
     switch (id) {
       case 'summary': return body(data.summary, false, isSide);
-      case 'experience': return data.experience.map(item => entry('experience', item.id, d.entryStyle === 'table' ? <>
+      case 'experience': return data.experience.map(item => entry('experience', item.id, aligned ? <>
+        <View wrap={false} minPresenceAhead={type.baseSize * 3}>{titleRow(item.role, dateRange(item.startDate, item.endDate, item.current, t.language), isSide)}{subRow(item.company, item.location, isSide)}</View>
+        {body(item.description, false, isSide)}{bullets(item.bullets, 0, isSide)}
+      </> : d.entryStyle === 'table' ? <>
         <View wrap={false} style={{ flexDirection: 'row', gap: 12, marginBottom: 5 }}>
           <View style={{ width: '27%' }}>{meta(dateRange(item.startDate, item.endDate, item.current, t.language), isSide)}</View>
           <View style={{ flex: 1 }}>{label(item.role, type.baseSize + 1, isSide)}{label(item.company, type.baseSize, isSide)}{meta(item.location, isSide)}</View>
@@ -85,7 +95,9 @@ export function ResumeDocument({ data, theme: t, onRender, continuations = [], s
         </Text>
         {body(item.description, false, isSide)}{bullets(item.bullets, 0, isSide)}
       </>, false, isSide));
-      case 'education': return data.education.map(item => entry('education', item.id, d.entryStyle === 'table' ? <>
+      case 'education': return data.education.map(item => entry('education', item.id, aligned ? <>
+        <View wrap={false} minPresenceAhead={type.baseSize * 3}>{titleRow(item.institution, dateRange(item.startDate, item.endDate, false, t.language), isSide, type.baseSize)}{subRow('', [item.degree, item.field].filter(Boolean).join(' · '), isSide)}</View>{body(item.description, true, isSide)}
+      </> : d.entryStyle === 'table' ? <>
         <View wrap={false} style={{ flexDirection: 'row', gap: 12, marginBottom: 5 }}>
           <View style={{ width: '27%' }}>{meta(dateRange(item.startDate, item.endDate, false, t.language), isSide)}</View>
           <View style={{ flex: 1 }}>{label(item.institution, type.baseSize, isSide)}{body([item.degree, item.field].filter(Boolean).join(' · '), false, isSide)}</View>
@@ -94,13 +106,16 @@ export function ResumeDocument({ data, theme: t, onRender, continuations = [], s
         <View wrap={false} minPresenceAhead={type.baseSize * 3}>{label(item.institution, type.baseSize, isSide)}{body([item.degree, item.field].filter(Boolean).join(' · '), false, isSide)}{meta(dateRange(item.startDate, item.endDate, false, t.language), isSide)}</View>{body(item.description, true, isSide)}
       </>, item.description.length < 650, isSide));
       case 'skills': return data.skills.map((category, catIndex) => (
-        <View data-edit={editTarget('skills', category.id)} key={category.id} wrap={category.skills.length > 20} style={{ marginTop: catIndex > 0 ? (isSide ? 6 : 8) : 0, marginBottom: isSide ? 3 : g.blockGap, flexShrink: 0 }}>
-          <View style={{ marginBottom: 3 }}>
+        <View data-edit={editTarget('skills', category.id)} key={category.id} wrap={category.skills.length > 20} style={{ marginTop: catIndex > 0 ? (t.skillStyle === 'inline' ? 3 : isSide ? 6 : 8) : 0, marginBottom: isSide ? 3 : t.skillStyle === 'inline' ? 2 : g.blockGap, flexShrink: 0 }}>
+          {t.skillStyle === 'inline' ? <Text style={{ lineHeight: line(), color: getTextColor(isSide) }}>
+            <Text style={{ fontWeight: 700, color: isSide && isDarkSidebar ? '#ffffff' : sAccent }}>{category.name}{isSide ? '\n' : ':  '}</Text>
+            {category.skills.map(skill => skill.name).filter(Boolean).join('  ·  ')}
+          </Text> : <View style={{ marginBottom: 3 }}>
             <Text style={{ lineHeight: line(type.baseSize), fontWeight: 700, fontSize: type.baseSize, color: isSide && isDarkSidebar ? '#ffffff' : sAccent, letterSpacing: 0.3 }}>
               {rich(category.name)}
             </Text>
-          </View>
-          {t.skillStyle === 'tags' ? (
+          </View>}
+          {t.skillStyle === 'inline' ? null : t.skillStyle === 'tags' ? (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 3 }}>
               {category.skills.map(skill => (
                 <View key={skill.id} wrap={false} style={{
@@ -131,7 +146,7 @@ export function ResumeDocument({ data, theme: t, onRender, continuations = [], s
         </View>
       ));
       case 'projects': return data.projects.map(item => entry('projects', item.id, <>
-        <View wrap={false} minPresenceAhead={type.baseSize * 3} style={{ flexShrink: 0 }}>{label(item.name, type.baseSize + 1, isSide)}{meta(item.role, isSide)}</View>{body(item.description, false, isSide)}{bullets(item.bullets, 0, isSide)}
+        <View wrap={false} minPresenceAhead={type.baseSize * 3} style={{ flexShrink: 0 }}>{aligned ? <View style={{ marginBottom: 4 }}>{titleRow(item.name, item.role, isSide)}</View> : <>{label(item.name, type.baseSize + 1, isSide)}{meta(item.role, isSide)}</>}</View>{body(item.description, false, isSide)}{bullets(item.bullets, 0, isSide)}
         {item.technologies.length > 0 && meta(item.technologies.join(' · '), isSide)}
         {item.url && <Text style={{ lineHeight: line(type.baseSize - 1), fontSize: type.baseSize - 1 }}>{link(fitUrl(item.url, textWidth(isSide) - entryInset), item.url, isSide && isDarkSidebar ? '#93c5fd' : c.accent)}</Text>}
       </>, keepProjectTogether(item), isSide));

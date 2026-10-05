@@ -35,7 +35,7 @@ describe('Zdjęcie i zgodność zapisanych projektów', () => {
     expect(resumeThemeSchema.safeParse({ ...defaultTheme, photo: { ...defaultTheme.photo, size: 200 } }).success).toBe(false);
   });
   it('kolekcja obejmuje różne kompozycje ze zdjęciem', () => {
-    expect(presets).toHaveLength(115); expect(new Set(presets.map(preset => preset.id)).size).toBe(115);
+    expect(presets).toHaveLength(31); expect(new Set(presets.map(preset => preset.id)).size).toBe(31);
     expect(presets.slice(0, 12).every(preset => preset.theme.photo.isVisible)).toBe(true);
     expect(new Set(presets.map(preset => preset.theme.headerStyle)).size).toBe(4);
     expect(new Set(presets.map(preset => preset.theme.layout)).size).toBe(4);
